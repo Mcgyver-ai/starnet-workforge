@@ -94,7 +94,7 @@ ok(/else if \(addProvider === active && \(providerAcceptsKey\(addProvider\) \|\|
   && !/Add it on its card above/.test(station), 'the selected provider\'s no-key line names its card as a door, never "its card above"');
 // (wiring) the line names what THAT card is missing: STARNET MANAGED takes no key (its card offers ↗ LINK STATION), CUSTOM's
 // key is optional and its card reads ○ NO ENDPOINT — "has no key yet" + "ADD IT" sent both to a card with no such field
-ok(/return !isOAuthProvider\(provider\) && provider !== 'ollama' && provider !== 'claude-cli' && provider !== 'starnet';/.test(station), 'STARNET MANAGED never counts as a key provider (agrees with harness providerNeedsKey)');
+ok(/return !isOAuthProvider\(provider\) && provider !== 'ollama' && provider !== 'claude-cli' && provider !== 'antigravity' && provider !== 'starnet';/.test(station), 'STARNET MANAGED never counts as a key provider (agrees with harness providerNeedsKey)');
 {
   const at = station.indexOf('  function selectedSetupLineHtml(');
   const src = station.slice(at, station.indexOf('\n  }\n', at) + 4);

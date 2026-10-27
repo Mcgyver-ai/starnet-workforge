@@ -12,14 +12,15 @@
       require('./anthropic.js'),
       require('./gemini.js'),
       require('./registry.js'),
-      require('./claude-cli.js')
+      require('./claude-cli.js'),
+      require('./antigravity-cli.js')
     );
   } else {
     root.SK = root.SK || {};
     root.SK.providers = root.SK.providers || {};
-    root.SK.providers.factory = factory(root.SK.providers.openrouter, root.SK.providers.codex, root.SK.providers.openaiCompatible, root.SK.providers.anthropic, root.SK.providers.gemini, root.SK.providers.registry, root.SK.providers.claudeCli);
+    root.SK.providers.factory = factory(root.SK.providers.openrouter, root.SK.providers.codex, root.SK.providers.openaiCompatible, root.SK.providers.anthropic, root.SK.providers.gemini, root.SK.providers.registry, root.SK.providers.claudeCli, root.SK.providers.antigravityCli);
   }
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (openrouter, codex, openaiCompatible, anthropic, gemini, registry, claudeCli) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (openrouter, codex, openaiCompatible, anthropic, gemini, registry, claudeCli, antigravityCli) {
   'use strict';
 
   const PROVIDER_IDS = registry.providerIds();
@@ -238,6 +239,10 @@
       // A local child process, not HTTP: no fetch/key/baseUrl — the CLI's own sign-in is the credential.
       // configDir = an extra connected account (subscription stacking); absent = the CLI's default sign-in.
       return claudeCli.makeClaudeCliProvider({ clock: opts.clock, configDir: opts.configDir || undefined });
+    }
+    if (profile.adapter === 'antigravity-cli') {
+      // A local `agy -p` child: its own Google sign-in is the credential; StarNet never sees a token.
+      return antigravityCli.makeAntigravityCliProvider({});
     }
     throw new Error('provider adapter is not wired: ' + profile.adapter);
   }

@@ -545,6 +545,30 @@
       order: 58
     },
     {
+      // ANTIGRAVITY CLI — Google's `agy` as the brain, on the user's own Antigravity sign-in (Google AI Pro/Ultra,
+      // free tier, or Gemini Enterprise): Gemini plus the Claude and GPT-OSS models Google serves inside Antigravity.
+      // providers/antigravity-cli.js drives the documented headless mode (`agy -p`) and never touches the OAuth token —
+      // third-party tools that reused it got accounts suspended. NOT unmetered: a Gemini-API-key sign-in bills.
+      id: 'antigravity',
+      aliases: ['agy', 'antigravity-cli', 'google-antigravity'],
+      name: 'Antigravity CLI',
+      label: 'ANTIGRAVITY',
+      endpoint: 'local `agy` command',
+      blurb: 'your Google Antigravity sign-in',
+      live: true,
+      adapter: 'antigravity-cli',
+      apiMode: 'antigravity_cli',
+      authType: 'none',
+      keyRequired: false,
+      modelsRequireAuth: false,
+      defaultReasoningEffort: 'medium',
+      unmetered: false,
+      credentialPool: false,
+      supportsTools: true,
+      supportsReasoning: true,
+      order: 59
+    },
+    {
       id: 'ollama',
       aliases: ['ollama-local'],
       name: 'Ollama',

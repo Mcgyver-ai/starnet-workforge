@@ -244,6 +244,9 @@
                 <!-- CLAUDE CLI: the locally installed Claude Code CLI as the brain — no key; its own sign-in is the
                      credential. #claude-cli-block below reports what the sidecar actually detected. -->
                 <button class="prov" data-prov="claude-cli" aria-pressed="false">CLAUDE CODE</button>
+                <!-- ANTIGRAVITY: Google's Antigravity CLI (`agy`) as the brain — no key; its own Google sign-in is the
+                     credential. #antigravity-block below reports what `agy models` proved. -->
+                <button class="prov" data-prov="antigravity" aria-pressed="false">ANTIGRAVITY</button>
                 <!-- label is COMPUTED by setProviderRowExpanded() from the live .prov.tail count — never hardcoded -->
                 <button type="button" id="prov-more" class="prov-more" aria-expanded="false">＋ MORE</button>
               </div>
@@ -336,6 +339,16 @@
                   </div>
                 </div>
                 <div class="dim hint" id="claude-cli-hint">Uses your Claude subscription (Pro, Max, Team or Enterprise) through <b>Claude Code</b> on this computer. Claude Code keeps your sign-in — StarNet never sees or stores it. StarNet keeps every Claude Code tool switched off and runs its own, so your station's permissions still apply. Subscription turns are booked at $0; an API-key sign-in is booked at the cost Claude Code reports.</div>
+              </div>
+            </div>
+
+            <!-- ANTIGRAVITY block — the ollama-block twin. #antigravity-status is a PROJECTION of the sidecar's catalog from
+                 `agy models` (app.js loadModels): it says "signed in" only once agy listed real models. StarNet never
+                 holds the Google credential, and never reuses Antigravity's OAuth token (accounts got suspended for that). -->
+            <div id="antigravity-block" class="hidden">
+              <div class="codex-signin">
+                <div id="antigravity-status" class="codex-status">checking for the Antigravity CLI on this computer…</div>
+                <div class="dim hint" id="antigravity-hint">Uses your Google Antigravity plan (free, Google AI Pro, Ultra or Enterprise) through the <b>Antigravity CLI</b> on this computer: Gemini, plus the Claude models Google serves in Antigravity. Install it from antigravity.google, then run <code>agy</code> once in a terminal and sign in with Google — the CLI keeps that sign-in, StarNet never sees it. StarNet runs its own gated tools and stops any turn where agy tries to use its own. Google sign-in turns are booked at $0; a Gemini API key sign-in is billed by Google and shows as unpriced here.</div>
               </div>
             </div>
 

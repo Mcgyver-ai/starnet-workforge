@@ -58,7 +58,7 @@ const ModelDock = (() => {
   };
   // CLAUDE CODE sits with the other subscription sign-ins (2026-10-02): at 15.5 its handful of models sank under
   // OpenRouter's whole catalog, and only an exact "claude code" search found them.
-  const PROVIDER_RANK = { starnet: -1, codex: 0, grok: 1, kimi: 2, 'claude-cli': 2.5, openrouter: 3, openai: 4, anthropic: 5, gemini: 6, xai: 7, groq: 8, mistral: 9, deepseek: 10, together: 11, fireworks: 12, perplexity: 13, cerebras: 14, ollama: 15, custom: 16 };
+  const PROVIDER_RANK = { starnet: -1, codex: 0, grok: 1, kimi: 2, 'claude-cli': 2.5, antigravity: 2.6, openrouter: 3, openai: 4, anthropic: 5, gemini: 6, xai: 7, groq: 8, mistral: 9, deepseek: 10, together: 11, fireworks: 12, perplexity: 13, cerebras: 14, ollama: 15, custom: 16 };
   // A linked station with an EMPTY wallet still led with STARNET, so its managed "Claude Opus" sat right above CLAUDE
   // CODE's and one mis-pick sent every run into "Out of managed credit" (2026-10-21 user reports). A REPORTED balance
   // <= 0 sinks the group below every other provider and labels it NO CREDITS; an unknown balance (null) changes nothing.
@@ -154,7 +154,7 @@ const ModelDock = (() => {
   }
   function providerLabel(p) {
     p = normalizeProvider(p);
-    const map = { starnet: 'STARNET', codex: 'GPT / CODEX', grok: 'GROK OAUTH', kimi: 'KIMI OAUTH', openrouter: 'OPENROUTER', openai: 'OPENAI API', anthropic: 'ANTHROPIC', gemini: 'GEMINI', xai: 'XAI', groq: 'GROQ', mistral: 'MISTRAL', deepseek: 'DEEPSEEK', together: 'TOGETHER', fireworks: 'FIREWORKS', perplexity: 'PERPLEXITY', cerebras: 'CEREBRAS', ollama: 'OLLAMA', 'claude-cli': 'CLAUDE CODE', custom: 'CUSTOM' };
+    const map = { starnet: 'STARNET', codex: 'GPT / CODEX', grok: 'GROK OAUTH', kimi: 'KIMI OAUTH', openrouter: 'OPENROUTER', openai: 'OPENAI API', anthropic: 'ANTHROPIC', gemini: 'GEMINI', xai: 'XAI', groq: 'GROQ', mistral: 'MISTRAL', deepseek: 'DEEPSEEK', together: 'TOGETHER', fireworks: 'FIREWORKS', perplexity: 'PERPLEXITY', cerebras: 'CEREBRAS', ollama: 'OLLAMA', 'claude-cli': 'CLAUDE CODE', antigravity: 'ANTIGRAVITY', custom: 'CUSTOM' };
     return map[p] || String(p || 'openrouter').toUpperCase();
   }
   function normalizeProvider(p) {
@@ -178,6 +178,7 @@ const ModelDock = (() => {
     if (p === 'starnet' || p === 'starnet-cloud' || p === 'managed') return 'starnet';
     if (p === 'ollama' || p === 'ollama-local') return 'ollama';
     if (p === 'claude-cli' || p === 'claude-code' || p === 'claude-code-cli') return 'claude-cli';
+    if (p === 'antigravity' || p === 'agy' || p === 'antigravity-cli' || p === 'google-antigravity') return 'antigravity';
     if (p === 'custom' || p === 'openai-compatible' || p === 'local' || p === 'vllm' || p === 'lmstudio') return 'custom';
     return 'openrouter';
   }
@@ -370,7 +371,7 @@ const ModelDock = (() => {
       if (typeof Harness !== 'undefined' && Harness.getKey && Harness.getKey(p)) return true;
       if (typeof Harness !== 'undefined' && Harness.configured && Harness.configured(p)) return true;
     } catch (_) {}
-    if (p === 'ollama' || p === 'claude-cli') return true;   // keyless local brains: their catalog is the proof
+    if (p === 'ollama' || p === 'claude-cli' || p === 'antigravity') return true;   // keyless local brains: their catalog is the proof
     return false;
   }
 
@@ -611,7 +612,7 @@ const ModelDock = (() => {
     loadTiers(!!force).then(() => { if (!loading && generation === fetchGeneration) renderList(); }).catch(() => {});
     // 'starnet' first: a linked station's own credits are the most direct way to run, and its catalog is
     // the whole managed lineup. providerEnabled() keeps it out of the list when no credits are configured.
-    const ids = ['starnet', 'codex', 'grok', 'kimi', 'openrouter', 'openai', 'anthropic', 'gemini', 'xai', 'groq', 'mistral', 'deepseek', 'together', 'fireworks', 'perplexity', 'cerebras', 'ollama', 'claude-cli', 'custom'];
+    const ids = ['starnet', 'codex', 'grok', 'kimi', 'openrouter', 'openai', 'anthropic', 'gemini', 'xai', 'groq', 'mistral', 'deepseek', 'together', 'fireworks', 'perplexity', 'cerebras', 'ollama', 'claude-cli', 'antigravity', 'custom'];
     const active = provider();
     if (ids.indexOf(active) < 0) ids.unshift(active);
     const pending = ids.map(p => fetchProviderModels(p, force));
@@ -1064,7 +1065,7 @@ const ModelDock = (() => {
   async function computeCatalog(force, ensure) {
     // #93: 'starnet' leads here exactly as in the dock — without it a per-agent picker offered managed credits only
     // while the FOCUSED agent already ran on them. providerEnabled() drops it (empty list) when the station is unlinked.
-    const ids = ['starnet', 'codex', 'grok', 'kimi', 'openrouter', 'openai', 'anthropic', 'gemini', 'xai', 'groq', 'mistral', 'deepseek', 'together', 'fireworks', 'perplexity', 'cerebras', 'ollama', 'claude-cli', 'custom'];
+    const ids = ['starnet', 'codex', 'grok', 'kimi', 'openrouter', 'openai', 'anthropic', 'gemini', 'xai', 'groq', 'mistral', 'deepseek', 'together', 'fireworks', 'perplexity', 'cerebras', 'ollama', 'claude-cli', 'antigravity', 'custom'];
     const active = provider();
     if (ids.indexOf(active) < 0) ids.unshift(active);
     const balance = refreshStarnetBalance().catch(() => {});

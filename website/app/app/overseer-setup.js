@@ -10,7 +10,7 @@ window.OverseerSetup = (() => {
     ollama: ['Ollama','Free · local'], xai: ['xAI','API key'], groq: ['Groq','API key'],
     mistral: ['Mistral','API key'], deepseek: ['DeepSeek','API key'], together: ['Together','API key'],
     fireworks: ['Fireworks','API key'], perplexity: ['Perplexity','API key'], cerebras: ['Cerebras','API key'],
-    custom: ['Custom','Your endpoint'], 'claude-cli': ['Claude Code','Your Claude subscription']
+    custom: ['Custom','Your endpoint'], 'claude-cli': ['Claude Code','Your Claude subscription'], antigravity: ['Antigravity','Your Google Antigravity sign-in']
   };
   function reflectProvider(provider) {
     const title = el('ov-connection-title');
@@ -19,6 +19,7 @@ window.OverseerSetup = (() => {
     if (help) help.textContent = provider === 'starnet' ? 'Confirm your account in the browser, then choose a model.'
       : provider === 'ollama' ? 'Choose a model installed on this computer.'
       : provider === 'claude-cli' ? 'Sign in with your Claude subscription, then choose a model.'
+      : provider === 'antigravity' ? 'Install the Antigravity CLI and run `agy` once to sign in with Google, then choose a model.'
       : provider === 'custom' ? 'Enter your endpoint, then choose or enter a model ID.'
       : provider === 'openai' ? 'Sign in with ChatGPT or add an OpenAI API key.'
       : ['grok','kimi','codex'].includes(provider) ? 'Sign in, then choose a model from your account.'

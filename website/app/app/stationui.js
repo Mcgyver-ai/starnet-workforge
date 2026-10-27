@@ -5285,6 +5285,7 @@ const StationUI = typeof document === 'undefined' ? {} : (() => {
     { id: 'cerebras',      name: 'CEREBRAS',          endpoint: 'api.cerebras.ai/v1',         blurb: 'Cerebras API', live: true },
     { id: 'ollama',        name: 'OLLAMA',            endpoint: '127.0.0.1:11434/v1',         blurb: 'local models', live: true },
     { id: 'claude-cli',    name: 'CLAUDE CODE',       endpoint: 'local `claude` command',     blurb: 'your Claude subscription', live: true },
+    { id: 'antigravity',   name: 'ANTIGRAVITY',       endpoint: 'local `agy` command',        blurb: 'your Google Antigravity sign-in', live: true },
     { id: 'custom',        name: 'CUSTOM',            endpoint: 'any /v1 base URL',           blurb: 'bring your endpoint', live: true }
   ];
   const H = () => (typeof Harness === 'object' && Harness) ? Harness : null;
@@ -5706,7 +5707,7 @@ const StationUI = typeof document === 'undefined' ? {} : (() => {
     STACKABLE_OAUTH.forEach(pid => refreshOAuthAccounts(pid, false));
     for (const p of PROVIDERS) {
       const credentialSaved = !!(h.hasStoredCredential && h.hasStoredCredential(p.id));
-      const endpointConfigured = p.id === 'ollama' || p.id === 'claude-cli' || (p.id === 'custom' && !!(h.getBaseUrl && h.getBaseUrl(p.id)));
+      const endpointConfigured = p.id === 'ollama' || p.id === 'claude-cli' || p.id === 'antigravity' || (p.id === 'custom' && !!(h.getBaseUrl && h.getBaseUrl(p.id)));
       if ((credentialSaved || endpointConfigured || p.id === activeProv()) && providerHealth[p.id] === undefined) refreshProviderHealth(p.id);
     }
   }
@@ -5744,7 +5745,7 @@ const StationUI = typeof document === 'undefined' ? {} : (() => {
       // whatever onboarding stored — and REMOVE-ing the last custom key stranded a still-active endpoint with no
       // editor. hasStoredCredential('custom') stays false for it (an endpoint is configuration, not a credential).
       const keylessEp = provider === 'custom' && !!(h.getBaseUrl && h.getBaseUrl('custom'));
-      if (set || keylessEp) out.push({ provider, key: h.getKey ? h.getKey(provider) : '', stored: !!set, baseUrl: h.getBaseUrl ? h.getBaseUrl(provider) : '', model: (h.getModel && h.getModel()) || '', local: provider === 'ollama' || provider === 'claude-cli' });
+      if (set || keylessEp) out.push({ provider, key: h.getKey ? h.getKey(provider) : '', stored: !!set, baseUrl: h.getBaseUrl ? h.getBaseUrl(provider) : '', model: (h.getModel && h.getModel()) || '', local: provider === 'ollama' || provider === 'claude-cli' || provider === 'antigravity' });
     }
     addProvider(active);
     if (active !== 'openrouter') addProvider('openrouter');
@@ -5756,7 +5757,7 @@ const StationUI = typeof document === 'undefined' ? {} : (() => {
   // excludes it too); its card offers ↗ LINK STATION, never a key field
   function providerAcceptsKey(provider) {
     provider = provider || activeProv();
-    return !isOAuthProvider(provider) && provider !== 'ollama' && provider !== 'claude-cli' && provider !== 'starnet';
+    return !isOAuthProvider(provider) && provider !== 'ollama' && provider !== 'claude-cli' && provider !== 'antigravity' && provider !== 'starnet';
   }
   /* The selected provider's "not set up yet" line under API KEYS (org P04) names what ITS card is missing: a key for a key
      provider, the ENDPOINT for CUSTOM (its key is optional; the card reads ○ NO ENDPOINT), the LINK for STARNET MANAGED (the
@@ -5842,7 +5843,7 @@ const StationUI = typeof document === 'undefined' ? {} : (() => {
      what you need; its address rides the tip. The group with no id list takes every provider the others do not name. */
   const PROVIDER_GROUPS = [
     { id: 'credits', label: 'STARNET CREDITS', note: 'link this station once, nothing to paste', ids: ['starnet'] },
-    { id: 'subscription', label: 'A SUBSCRIPTION YOU HAVE', note: 'sign in, no API key', ids: ['codex', 'grok', 'kimi', 'claude-cli'] },
+    { id: 'subscription', label: 'A SUBSCRIPTION YOU HAVE', note: 'sign in, no API key', ids: ['codex', 'grok', 'kimi', 'claude-cli', 'antigravity'] },
     { id: 'key', label: 'AN API KEY', note: 'paste a key from the service’s website' },
     { id: 'own', label: 'YOUR OWN MODELS', note: 'on this computer, or a server you run', ids: ['ollama', 'custom'] }
   ];
@@ -5875,7 +5876,7 @@ const StationUI = typeof document === 'undefined' ? {} : (() => {
       const codexDead = isOAuthProvider(p.id) && oauthExpiredFor(p.id);
       const h = H();
       const credentialSaved = isOAuthProvider(p.id) ? (ks.length > 0 && !codexDead) : !!(h && h.hasStoredCredential && h.hasStoredCredential(p.id));
-      const endpointConfigured = p.id === 'ollama' || p.id === 'claude-cli' || (p.id === 'custom' && !!(h && h.getBaseUrl && h.getBaseUrl(p.id)));
+      const endpointConfigured = p.id === 'ollama' || p.id === 'claude-cli' || p.id === 'antigravity' || (p.id === 'custom' && !!(h && h.getBaseUrl && h.getBaseUrl(p.id)));
       const configured = credentialSaved || endpointConfigured;
       const health = providerHealth[p.id];
       // ACTIVE is reserved for a selected model whose endpoint and credential (when applicable) were proven by
@@ -5883,13 +5884,15 @@ const StationUI = typeof document === 'undefined' ? {} : (() => {
       // CLAUDE CODE has no key to verify: its sign-in is proven by the CLI (claudeCliSt) and its catalog by the probe
       const runnable = !!(health && health.reachable && (health.credentialVerified || (p.id === 'claude-cli' && claudeCliSt && claudeCliSt.loggedIn)) && p.id === active && h && h.getModel && h.getModel());
       const claudeIn = p.id === 'claude-cli' && !!(claudeCliSt && claudeCliSt.loggedIn);
-      const cls = codexDead ? 'avail expired' : ((p.id === 'claude-cli' ? claudeIn : configured) ? 'conn' : (p.live ? 'avail' : 'soon'));
+      // antigravity is "configured" on every station (no key to save), so only a proven catalog may light it up
+      const agyIn = p.id === 'antigravity' && !!(health && health.reachable);
+      const cls = codexDead ? 'avail expired' : ((p.id === 'claude-cli' ? claudeIn : p.id === 'antigravity' ? agyIn : configured) ? 'conn' : (p.live ? 'avail' : 'soon'));
       // E5: `connected` is KEY PRESENCE, not a verified live connection — a saved key can be revoked,
       // rate-limited, or wrong, and we haven't round-tripped it. Label it "KEY SAVED" (or SIGNED IN for
       // the codex OAuth path, which IS real auth) rather than the over-claiming "CONNECTED". The
       // ACTIVE/runnable badge logic below is unchanged — that already gates on selected provider + model.
       const connLabel = isOAuthProvider(p.id) ? '● SIGNED IN' : '● KEY SAVED';
-      const keyless = p.id === 'ollama' || p.id === 'claude-cli' || (p.id === 'custom' && endpointConfigured && !credentialSaved);
+      const keyless = p.id === 'ollama' || p.id === 'claude-cli' || p.id === 'antigravity' || (p.id === 'custom' && endpointConfigured && !credentialSaved);
       const localStat = !endpointConfigured ? '○ NO ENDPOINT' : health === undefined ? '◐ LOCAL ENDPOINT CONFIGURED · CHECKING…'
         : health && health.reachable ? '● LOCAL ENDPOINT CONFIGURED · REACHABLE' : '○ LOCAL ENDPOINT CONFIGURED · OFFLINE';
       const keyStat = health === undefined ? connLabel + ' · CHECKING…'
@@ -5898,8 +5901,11 @@ const StationUI = typeof document === 'undefined' ? {} : (() => {
       const claudeStat = claudeCliSt === undefined ? '◐ CHECKING CLAUDE CODE…' : claudeCliSt === null ? '○ COULDN’T CHECK CLAUDE CODE'
         : !claudeCliSt.installed ? '○ CLAUDE CODE NOT INSTALLED' : !claudeCliSt.loggedIn ? '○ NOT SIGNED IN'
         : '● SIGNED IN' + claudeCliPlan(claudeCliSt);
+      // ANTIGRAVITY has no status command: `agy models` answering (the probe's catalog) is the only proof of a sign-in
+      const isAgy = p.id === 'antigravity';
+      const agyStat = health === undefined ? '◐ CHECKING ANTIGRAVITY CLI…' : health && health.reachable ? '● SIGNED IN · `agy` ON THIS COMPUTER' : '○ NOT READY';
       const stat = !p.live ? '○ COMING SOON' : codexDead ? '⚠ SIGN-IN EXPIRED — RECONNECT'
-        : isClaude ? claudeStat : keyless ? localStat : credentialSaved ? keyStat : (isOAuthProvider(p.id) ? '○ NOT SIGNED IN' : (p.id === 'custom' ? '○ NO ENDPOINT' : '○ NO KEY'));
+        : isClaude ? claudeStat : isAgy ? agyStat : keyless ? localStat : credentialSaved ? keyStat : (isOAuthProvider(p.id) ? '○ NOT SIGNED IN' : (p.id === 'custom' ? '○ NO ENDPOINT' : '○ NO KEY'));
       // #62: NOT VERIFIED / CHECK FAILED says WHY (the probe's own reason: "credential probe HTTP 401", a station
       // refusal, a timeout) — a bare verdict left a valid-key user with nothing to act on.
       // org P03: a probe that gave no reason still says what it saw — never a bare NOT VERIFIED / CHECK FAILED.
@@ -5907,7 +5913,8 @@ const StationUI = typeof document === 'undefined' ? {} : (() => {
       // the NOT VERIFIED line it explains; only a real failure (HTTP 401, a refusal, no answer) keeps the error red
       const statWhy = p.live && !codexDead && credentialSaved && !isClaude && !keyless && health && !health.credentialVerified
         ? '<span class="prov-stat-why' + (!health.error && health.reachable ? ' soft' : '') + '">' + esc(health.error ? String(health.error).slice(0, 200)
-          : health.reachable ? 'the provider answered but did not confirm this key' : 'the check got no answer from the provider') + '</span>' : '';
+          : health.reachable ? 'the provider answered but did not confirm this key' : 'the check got no answer from the provider') + '</span>'
+        : isAgy && health && !health.reachable ? '<span class="prov-stat-why">' + esc(String(health.error || 'install the Antigravity CLI, then run `agy` once in a terminal to sign in').slice(0, 200)) + '</span>' : '';
       const n = ks.length;
       // NO-KEY cards that accept a key get an inline, collapsible paste-and-save row so the user never has to hunt
       // for where keys live. It reuses the SAME save path (Harness.setKey) as the key list below — no duplicate logic.

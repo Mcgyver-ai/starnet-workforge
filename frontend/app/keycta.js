@@ -26,13 +26,14 @@ const KeyCTA = (() => {
     if (p === 'kimi' || p === 'moonshot' || p === 'kimi-for-coding') return 'kimi';
     if (p === 'ollama' || p === 'ollama-local') return 'ollama';
     if (p === 'claude-cli' || p === 'claude-code' || p === 'claude-code-cli') return 'claude-cli';
+    if (p === 'antigravity' || p === 'agy' || p === 'antigravity-cli' || p === 'google-antigravity') return 'antigravity';
     if (p === 'custom' || p === 'openai-compatible' || p === 'local' || p === 'vllm' || p === 'lmstudio') return 'custom';
     return p;
   }
   function providerNeedsKey(p) {
     p = normProv(p);
     // codex/grok/kimi are keyless OAuth sign-ins; ollama/custom are keyless-by-design endpoints.
-    return p !== 'codex' && p !== 'grok' && p !== 'kimi' && p !== 'ollama' && p !== 'custom' && p !== 'claude-cli';
+    return p !== 'codex' && p !== 'grok' && p !== 'kimi' && p !== 'ollama' && p !== 'custom' && p !== 'claude-cli' && p !== 'antigravity';
   }
   function activeProvider() {
     return normProv((typeof Harness !== 'undefined' && Harness.getProv) ? Harness.getProv() : 'openrouter');
