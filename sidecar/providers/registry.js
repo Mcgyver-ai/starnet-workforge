@@ -521,6 +521,32 @@
       order: 44
     },
     {
+      // FREELLMAPI — the user's local free-tier gateway (`npx freellmapi`), OpenAI-compatible under /v1. Its web UI
+      // answers every other path with a 200 page, so a bare :31415 base URL on CUSTOM never reached the API.
+      id: 'freellmapi',
+      aliases: ['free-llm-api'],
+      name: 'FreeLLMAPI',
+      label: 'FREELLMAPI',
+      endpoint: '127.0.0.1:31415/v1',
+      blurb: 'local free-tier gateway',
+      live: true,
+      adapter: 'openai-compatible',
+      apiMode: 'chat_completions',
+      authType: 'api_key',
+      keyRequired: true,
+      keyEnv: ['FREELLMAPI_KEY', 'FREELLMAPI_API_KEY'],
+      modelsRequireAuth: true,
+      baseUrl: 'http://127.0.0.1:31415/v1',
+      baseUrlEnv: ['FREELLMAPI_BASE_URL'],
+      modelsPath: '/models',
+      defaultReasoningEffort: 'medium',
+      unmetered: false,
+      credentialPool: true,
+      supportsTools: null,
+      supportsReasoning: null,
+      order: 45
+    },
+    {
       // CLAUDE CLI — the locally installed Claude Code CLI (`claude`) as the brain, signed in with the user's own
       // Claude account or key. No key is stored here: providers/claude-cli.js spawns `claude -p` per turn with
       // every CLI tool disabled, so StarNet's own capability gate still owns tool use. NOT unmetered: a

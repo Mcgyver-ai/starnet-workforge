@@ -9,7 +9,7 @@ window.OverseerSetup = (() => {
     openai: ['OpenAI','ChatGPT or API key'], anthropic: ['Anthropic','API key'], gemini: ['Gemini','API key'],
     ollama: ['Ollama','Free · local'], xai: ['xAI','API key'], groq: ['Groq','API key'],
     mistral: ['Mistral','API key'], deepseek: ['DeepSeek','API key'], together: ['Together','API key'],
-    fireworks: ['Fireworks','API key'], perplexity: ['Perplexity','API key'], cerebras: ['Cerebras','API key'],
+    fireworks: ['Fireworks','API key'], perplexity: ['Perplexity','API key'], cerebras: ['Cerebras','API key'], freellmapi: ['FreeLLMAPI','API key'],
     custom: ['Custom','Your endpoint'], 'claude-cli': ['Claude Code','Your Claude subscription'], antigravity: ['Antigravity','Your Google Antigravity sign-in']
   };
   function reflectProvider(provider) {

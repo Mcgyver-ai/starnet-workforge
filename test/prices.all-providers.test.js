@@ -32,6 +32,7 @@ const UNPRICED_BY_DESIGN = {
   perplexity: 'vendor publishes per-request search fees on top of tokens; a token rate alone would under-report',
   custom: 'a user-supplied endpoint: nothing is known about its billing',
   cerebras: 'console.groq-style catalog carries no pricing and the vendor page lists too few ids to table (2026-08-21)',
+  freellmapi: 'a local gateway routing to whichever free tier answers: no stable vendor to price (2026-10-28)',
   starnet: 'managed proxy bills the ledger per request itself (usage.cost on the wire)'
 };
 // models a profile would run by default: its first static model, else a representative id per family

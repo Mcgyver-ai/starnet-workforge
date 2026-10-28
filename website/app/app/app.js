@@ -862,6 +862,7 @@ const App = (() => {
       fireworks: 'FIREWORKS',
       perplexity: 'PERPLEXITY',
       cerebras: 'CEREBRAS',
+      freellmapi: 'FREELLMAPI',
       starnet: 'STARNET MANAGED',
       ollama: 'OLLAMA',
       'claude-cli': 'CLAUDE CODE',
@@ -888,6 +889,7 @@ const App = (() => {
     if (p === 'fireworks' || p === 'fireworks-ai') return 'fireworks';
     if (p === 'perplexity' || p === 'pplx' || p === 'sonar') return 'perplexity';
     if (p === 'cerebras') return 'cerebras';
+    if (p === 'freellmapi' || p === 'free-llm-api') return 'freellmapi';
     // managed credits — its bearer is the linked device token, never a key the user pastes
     if (p === 'starnet' || p === 'starnet-cloud' || p === 'managed') return 'starnet';
     if (p === 'ollama' || p === 'ollama-local') return 'ollama';
@@ -921,6 +923,7 @@ const App = (() => {
     if (p === 'fireworks') return 'Fireworks API key';
     if (p === 'perplexity') return 'pplx-...  -  perplexity.ai/settings/api';
     if (p === 'cerebras') return 'Cerebras API key';
+    if (p === 'freellmapi') return 'FreeLLMAPI key  -  your gateway at 127.0.0.1:31415';
     if (p === 'custom') return 'optional API key for this endpoint';
     return 'sk-or-...  -  openrouter.ai/keys';
   }
@@ -940,6 +943,7 @@ const App = (() => {
       fireworks: 'https://fireworks.ai/account/api-keys',
       perplexity: 'https://www.perplexity.ai/settings/api',
       cerebras: 'https://cloud.cerebras.ai',
+      freellmapi: 'http://127.0.0.1:31415',
       // not a key page: managed credits are obtained by LINKING a station in the STORE
       starnet: 'https://account.starnetos.com',
       openrouter: 'https://openrouter.ai/keys'

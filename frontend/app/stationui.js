@@ -5283,6 +5283,7 @@ const StationUI = typeof document === 'undefined' ? {} : (() => {
     { id: 'fireworks',     name: 'FIREWORKS',         endpoint: 'api.fireworks.ai/inference/v1', blurb: 'Fireworks API', live: true },
     { id: 'perplexity',    name: 'PERPLEXITY',        endpoint: 'api.perplexity.ai',          blurb: 'Sonar API', live: true },
     { id: 'cerebras',      name: 'CEREBRAS',          endpoint: 'api.cerebras.ai/v1',         blurb: 'Cerebras API', live: true },
+    { id: 'freellmapi',    name: 'FREELLMAPI',        endpoint: '127.0.0.1:31415/v1',         blurb: 'local free-tier gateway', live: true },
     { id: 'ollama',        name: 'OLLAMA',            endpoint: '127.0.0.1:11434/v1',         blurb: 'local models', live: true },
     { id: 'claude-cli',    name: 'CLAUDE CODE',       endpoint: 'local `claude` command',     blurb: 'your Claude subscription', live: true },
     { id: 'antigravity',   name: 'ANTIGRAVITY',       endpoint: 'local `agy` command',        blurb: 'your Google Antigravity sign-in', live: true },

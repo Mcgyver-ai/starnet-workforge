@@ -184,14 +184,14 @@
      console host in the body. An "openai-compatible http …" error with no host names nobody, so it returns null
      and the copy stays provider-neutral. Ids are the AI & MODELS card ids (.prov-card[data-provider]). */
   const PROVIDER_IDS = ['starnet', 'openrouter', 'codex', 'grok', 'kimi', 'openai', 'anthropic', 'gemini', 'xai', 'groq',
-    'mistral', 'deepseek', 'together', 'fireworks', 'perplexity', 'cerebras', 'ollama', 'custom'];
+    'mistral', 'deepseek', 'together', 'fireworks', 'perplexity', 'cerebras', 'freellmapi', 'ollama', 'custom'];
   const PROVIDER_WORDS = { codex: 'CHATGPT', grok: 'GROK', kimi: 'KIMI', starnet: 'STARNET' };
   function providerWord(id) { return PROVIDER_WORDS[id] || String(id || '').toUpperCase(); }
   // a provider's name inside a SENTENCE (org P03): the brand's own case, like the sibling rows' 'No ChatGPT sign-in yet'.
   // Key labels keep providerWord's capitals; an id with no prose name keeps the provider-neutral copy.
   const PROVIDER_PROSE = { openrouter: 'OpenRouter', codex: 'ChatGPT', grok: 'Grok', kimi: 'Kimi', starnet: 'StarNet', openai: 'OpenAI',
     anthropic: 'Anthropic', gemini: 'Gemini', xai: 'xAI', groq: 'Groq', mistral: 'Mistral', deepseek: 'DeepSeek', together: 'Together AI',
-    fireworks: 'Fireworks', perplexity: 'Perplexity', cerebras: 'Cerebras' };
+    fireworks: 'Fireworks', perplexity: 'Perplexity', cerebras: 'Cerebras', freellmapi: 'FreeLLMAPI' };
   /* A SIGN-IN SUBSCRIPTION HAS NO WALLET (org P03, final round). The keyless sign-ins — ChatGPT (codex), Grok on SuperGrok /
      X Premium+, Kimi for Coding — are PLANS (sidecar/providers/registry.js: oauth_device_code + unmetered), so a billing or
      quota verdict on one is a spent plan allowance that resets on the provider's own schedule: never "out of credit — top
