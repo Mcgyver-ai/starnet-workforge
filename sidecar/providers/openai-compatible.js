@@ -1045,6 +1045,12 @@
           guard.disarm();
           if (probe) probe.stop();
         }
+        // A gateway's web UI answers every non-API path with a 200 page (freellmapi at :31415 without /v1): a stream
+        // parsed from HTML yields nothing, so the run ended silently. Name the endpoint and the likely fix instead.
+        if (res.ok && /text\/html/i.test(String((res.headers && res.headers.get && res.headers.get('content-type')) || ''))) {
+          throw new Error(errLabel + ' returned a web page, not an API response, from ' + baseUrl + chatPath +
+            ' — the base URL most likely needs its API path (e.g. ' + baseUrl.replace(/\/+$/, '') + '/v1)');
+        }
         if (res.ok && res.body) {
           if (native) noteOllamaWindow(nativeBase, body.model, wire.numCtx);
           return res;
