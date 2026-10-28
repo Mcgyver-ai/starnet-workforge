@@ -1445,5 +1445,6 @@
     };
   }
 
-  return { makeClaudeCliProvider, makeCliHost, _internals: { buildPrompt, makeCallSplitter, parseCall, invokeCall, estimateUsd, toolsPrompt, MODELS } };
+  // looseCall is shared with antigravity-cli.js, which speaks the same text tool-call protocol over `agy -p`
+  return { makeClaudeCliProvider, makeCliHost, _internals: { buildPrompt, makeCallSplitter, parseCall, looseCall, invokeCall, estimateUsd, toolsPrompt, MODELS } };
 });

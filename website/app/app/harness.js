@@ -521,6 +521,7 @@ const Harness = (() => {
     if (p === 'starnet' || p === 'starnet-cloud' || p === 'managed') return 'starnet';
     if (p === 'ollama' || p === 'ollama-local') return 'ollama';
     if (p === 'claude-cli' || p === 'claude-code' || p === 'claude-code-cli') return 'claude-cli';
+    if (p === 'antigravity' || p === 'agy' || p === 'antigravity-cli' || p === 'google-antigravity') return 'antigravity';
     if (p === 'custom' || p === 'openai-compatible' || p === 'local' || p === 'vllm' || p === 'lmstudio') return 'custom';
     return 'openrouter';
   }
@@ -548,12 +549,12 @@ const Harness = (() => {
     const p = normalizeProviderId(provider);
     // codex/grok/kimi authenticate by device-code OAuth tokens held sidecar-side; ollama/custom are keyless
     // endpoints; starnet's bearer is the linked device token, which the user never sees, let alone pastes;
-    // claude-cli authenticates with the local Claude CLI's own sign-in.
-    return p !== 'codex' && p !== 'grok' && p !== 'kimi' && p !== 'ollama' && p !== 'custom' && p !== 'starnet' && p !== 'claude-cli';
+    // claude-cli / antigravity authenticate with the local CLI's own sign-in (`claude`, `agy`).
+    return p !== 'codex' && p !== 'grok' && p !== 'kimi' && p !== 'ollama' && p !== 'custom' && p !== 'starnet' && p !== 'claude-cli' && p !== 'antigravity';
   }
   function configured(provider) {
     const p = normalizeProviderId(provider);
-    if (p === 'ollama' || p === 'claude-cli') return true;
+    if (p === 'ollama' || p === 'claude-cli' || p === 'antigravity') return true;
     if (p === 'custom' && getBaseUrl(p)) return true;
     // STARNET MANAGED is configured IFF the sidecar reports live credits — in BOTH modes. It must not fall
     // through to the keyless branch below, which would answer "configured" for every station simply because
@@ -578,7 +579,7 @@ const Harness = (() => {
     // probe + app.js's status refresh) is the only local truth; in the browser the active-provider pick stands in.
     if (p === 'grok' || p === 'kimi') return DESKTOP ? !!_configuredByProvider[p] : (getProv() === p);
     if (p === 'ollama') return false;                      // an endpoint is configuration, never a credential
-    if (p === 'claude-cli') return false;                  // the local CLI's own sign-in is not a StarNet credential
+    if (p === 'claude-cli' || p === 'antigravity') return false;   // the local CLI's own sign-in is not a StarNet credential
     // a keyless custom endpoint must not manufacture a key row. On desktop getKey is '' by design, so the keychain
     // map below is the custom key's only truth (GitHub #111: a saved desktop CUSTOM key read as keyless).
     if (p === 'custom' && !DESKTOP && !getKey(p)) return false;
@@ -644,7 +645,7 @@ const Harness = (() => {
      hand-over carries that revision and the station takes it only if nothing changed since — an older page can never
      put back a key the Commander rotated or removed elsewhere. A save or REMOVE that failed to reach the station is
      `pending`: the next page boot retries it (on the same condition) until the station confirms it. */
-  const ENGINE_SYNC_SKIP = { codex: 1, grok: 1, kimi: 1, starnet: 1, 'claude-cli': 1 };
+  const ENGINE_SYNC_SKIP = { codex: 1, grok: 1, kimi: 1, starnet: 1, 'claude-cli': 1, antigravity: 1 };
   const ENGINE_SYNC_SLOT = 'starnet.byok.engineSync';
   const ENGINE_RETRY_NOTE = ' — this page retries the next time it loads';
   function engineConfigOf(p) {
@@ -1051,7 +1052,7 @@ const Harness = (() => {
     const p = normalizeProviderId(provider || getProv());
     const baseUrl = getBaseUrl(p) || '';
     const credentialSaved = hasStoredCredential(p);
-    const endpointConfigured = p === 'ollama' || p === 'claude-cli' || (p === 'custom' && !!baseUrl);
+    const endpointConfigured = p === 'ollama' || p === 'claude-cli' || p === 'antigravity' || (p === 'custom' && !!baseUrl);
     const selected = p === getProv();
     const fallback = { provider: p, credentialSaved, endpointConfigured, reachable: false, catalogAvailable: false, credentialVerified: false, selected, error: 'station unreachable' };
     if (p === 'custom' && !endpointConfigured) return Object.assign({}, fallback, { error: 'endpoint not configured' });

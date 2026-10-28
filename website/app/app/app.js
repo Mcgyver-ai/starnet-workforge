@@ -865,6 +865,7 @@ const App = (() => {
       starnet: 'STARNET MANAGED',
       ollama: 'OLLAMA',
       'claude-cli': 'CLAUDE CODE',
+      antigravity: 'ANTIGRAVITY',
       custom: 'CUSTOM'
     };
     return map[provider] || String(provider || 'openrouter').toUpperCase();
@@ -891,16 +892,17 @@ const App = (() => {
     if (p === 'starnet' || p === 'starnet-cloud' || p === 'managed') return 'starnet';
     if (p === 'ollama' || p === 'ollama-local') return 'ollama';
     if (p === 'claude-cli' || p === 'claude-code' || p === 'claude-code-cli') return 'claude-cli';
+    if (p === 'antigravity' || p === 'agy' || p === 'antigravity-cli' || p === 'google-antigravity') return 'antigravity';
     if (p === 'custom' || p === 'openai-compatible' || p === 'local' || p === 'vllm' || p === 'lmstudio') return 'custom';
     return 'openrouter';
   }
   function providerNeedsKey(provider) {
     const p = normalizeProviderId(provider);
-    return p !== 'codex' && p !== 'grok' && p !== 'kimi' && p !== 'ollama' && p !== 'custom' && p !== 'starnet' && p !== 'claude-cli';
+    return p !== 'codex' && p !== 'grok' && p !== 'kimi' && p !== 'ollama' && p !== 'custom' && p !== 'starnet' && p !== 'claude-cli' && p !== 'antigravity';
   }
   function providerUsesKeyBox(provider) {
     const p = normalizeProviderId(provider);
-    return p !== 'codex' && p !== 'grok' && p !== 'kimi' && p !== 'ollama' && p !== 'starnet' && p !== 'claude-cli';
+    return p !== 'codex' && p !== 'grok' && p !== 'kimi' && p !== 'ollama' && p !== 'starnet' && p !== 'claude-cli' && p !== 'antigravity';
   }
   function providerNeedsBaseUrl(provider) {
     return normalizeProviderId(provider) === 'custom';
@@ -1683,6 +1685,9 @@ const App = (() => {
     cerebras: ['llama-4-scout-17b-16e-instruct', 'llama3.1-8b', 'qwen-3-coder-480b'],
     ollama: ['qwen3:8b', 'llama3.1', 'qwen2.5-coder', 'mistral'],
     'claude-cli': ['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-haiku-4-5-20251001'],   // [0] = the default pick; the live catalog adds the rest
+    // agy's slugs are display strings that follow the account's plan; `agy models` (the live catalog) always wins.
+    // These are the names antigravity.google/docs/models lists, shown only while the catalog is offline.
+    antigravity: ['Gemini 3.8 Flash', 'Gemini 4 Argon', 'Claude Sonnet 5.5 (Thinking)', 'Claude Opus 5.5 (Thinking)'],
     openrouter: ['gpt-5.5', 'anthropic/claude-sonnet-4.6', 'anthropic/claude-opus-4.8', 'openai/gpt-5', 'google/gemini-2.5-pro'],
     // #93: STARNET MANAGED's catalog is the routed vendor/model lineup — a bare 'gpt-5.5' (the openrouter row it used
     // to borrow) is "not in the catalog" there and the dock cleared it. Its own list saves a catalog-shaped id.
@@ -1757,6 +1762,15 @@ const App = (() => {
         os.textContent = list.length
           ? '● ollama detected on this machine · ' + list.length + ' local model' + (list.length === 1 ? '' : 's') + ' ready'
           : '○ ollama not detected yet — install it from ollama.com, pull a model, and it will show up here';
+      }
+    }
+    // ANTIGRAVITY status = the same catalog truth: `agy models` answering is the only proof agy is installed and signed in
+    if (p === 'antigravity' && pickedProvider === 'antigravity') {
+      const as = el('antigravity-status');
+      if (as) {
+        as.textContent = list.length
+          ? '● Antigravity CLI signed in · ' + list.length + ' model' + (list.length === 1 ? '' : 's') + ' on your plan'
+          : '○ Antigravity CLI not ready — install it, run `agy` once in a terminal to sign in with Google, then pick ANTIGRAVITY again';
       }
     }
     updateHint();
@@ -2140,11 +2154,14 @@ const App = (() => {
     { const ob = el('ollama-block'); if (ob) ob.classList.toggle('hidden', !isOllama); }
     const isClaudeCli = pickedProvider === 'claude-cli';
     { const cb = el('claude-cli-block'); if (cb) cb.classList.toggle('hidden', !isClaudeCli); }
+    // ANTIGRAVITY (`agy`) wears an ollama-style block: its status is painted by loadModels() from `agy models`.
+    const isAgy = pickedProvider === 'antigravity';
+    { const ab = el('antigravity-block'); if (ab) ab.classList.toggle('hidden', !isAgy); }
     if (isClaudeCli) refreshClaudeCliStatus(); else stopClaudeCliTimer();   // an in-flight sign-in resumes on re-pick
     // the BYOK note talks about your key on 127.0.0.1 / the OS keychain — irrelevant and contradictory on the
     // keyless subscription paths (no key at all), so hide the whole disclosure there. On BYOK it stays collapsed
     // behind its toggle (progressive disclosure) — the note's own .hidden is owned by #byok-toggle, not this switch.
-    { const bd = el('byok-disclose'); if (bd) bd.classList.toggle('hidden', isOAuth || isStarnet || isOllama || isClaudeCli); }   // ollama: no key exists to ask about
+    { const bd = el('byok-disclose'); if (bd) bd.classList.toggle('hidden', isOAuth || isStarnet || isOllama || isClaudeCli || isAgy); }   // ollama: no key exists to ask about
     // Switching providers must drop any OTHER provider's in-flight device-code poll — a code minted for the
     // previous pick has no business connecting the new one's block. The active pick's own poll survives a re-click.
     cancelOAuthPolls(isOpenAI ? 'codex' : pickedProvider);   // the OPENAI card's sign-in IS the codex poll — keep it alive
