@@ -1,6 +1,9 @@
 /* node test/battlepass.test.js — the quest-log battle pass is a pure, honest projection of Commander progression:
    tiers = levels, streak = local days with verified points, challenges = this week's verified awards, rewards cosmetic. */
 'use strict';
+// Pinned to a zone whose clocks go back on Sun Oct 25 2026, inside the test week: CI's UTC never crossed a DST change,
+// so a week counted as 7×24h (reset at Sunday 23:00) and an 11-days-left season passed there and failed in London.
+process.env.TZ = 'Europe/London';
 const A = require('./_assert.js');
 const BP = require('../frontend/app/battlepass.js');
 
@@ -94,7 +97,7 @@ A.eq(se.no, 3, 'Aug = season 1, Oct = season 3');
 A.eq(se.pts, 60, 'only this month\'s awards count toward the season');
 A.eq(se.daysLeft, 10, 'Oct 21 → 10 days left after today');
 
-A.eq(BP.build({ now: NOW }).week.resetsIn, '4D 9H', 'Wed 15:00 → next Monday 00:00 is 4D 9H');
+A.eq(BP.build({ now: NOW }).week.resetsIn, '4D 10H', 'Wed 15:00 → next Monday 00:00 is 4D 10H (the clocks-back night is 25h)');
 A.eq(BP.build({ now: at(2026, 10, 25, 23) }).week.resetsIn, '1H', 'Sunday 23:00 → 1H');
 
 // ---- sweep 10-20 regressions

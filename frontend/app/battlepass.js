@@ -72,10 +72,9 @@
   // transitions (23h / 25h days) never split or merge a day.
   function ymd(ms) { const d = new Date(ms); return { y: d.getFullYear(), m: d.getMonth(), d: d.getDate(), wd: d.getDay() }; }
   function ordinal(ms) { const t = ymd(ms); return Math.round(Date.UTC(t.y, t.m, t.d) / DAY); }
-  function startOfDay(ms) { const t = ymd(ms); return new Date(t.y, t.m, t.d).getTime(); }
-  function startOfWeek(ms) {   // Monday 00:00 local
+  function startOfWeek(ms, weeksAhead) {   // Monday 00:00 local (by calendar date: a DST week is 167h or 169h)
     const t = ymd(ms); const back = (t.wd + 6) % 7;
-    return new Date(t.y, t.m, t.d - back).getTime();
+    return new Date(t.y, t.m, t.d - back + 7 * (weeksAhead || 0)).getTime();
   }
   function startOfMonth(ms) { const t = ymd(ms); return new Date(t.y, t.m, 1).getTime(); }
   function startOfNextMonth(ms) { const t = ymd(ms); return new Date(t.y, t.m + 1, 1).getTime(); }
@@ -207,7 +206,7 @@
     const fm = ymd(firstAt || now), nm = ymd(now);
     const seasonNo = Math.max(1, (nm.y - fm.y) * 12 + (nm.m - fm.m) + 1);
     const seasonPts = evts.filter(e => e.at >= monthStart && e.at < monthEnd).reduce((s, e) => s + e.points, 0);
-    const weekEnd = startOfWeek(now) + 7 * DAY;
+    const weekEnd = startOfWeek(now, 1);
 
     return {
       tier, points, into, perTier: PER_TIER, toNext: PER_TIER - into, pct: Math.round((into / PER_TIER) * 100),
@@ -215,7 +214,7 @@
       claimable: track.filter(t => t.claimable).map(t => t.tier), claimedTier: claimed,
       track,
       streak: streakOf(evts, now),
-      season: { no: seasonNo, name: MONTHS[nm.m], pts: seasonPts, daysLeft: Math.max(0, Math.ceil((monthEnd - startOfDay(now)) / DAY) - 1) },
+      season: { no: seasonNo, name: MONTHS[nm.m], pts: seasonPts, daysLeft: Math.max(0, ordinal(monthEnd) - ordinal(now) - 1) },
       week: { resetsIn: resetLabel(weekEnd - now) },
       challenges: challengesOf(evts, input, now),
       empty: points === 0 && !evts.length
