@@ -18,7 +18,7 @@
   "expectedClaimCount": 37,
   "releaseSurface": {
     "algorithm": "sha256",
-    "sourceCommit": "5d7cc31f12d4955b93126b60e7d043cd9fe92634",
+    "sourceCommit": "f6e5c3c9aca0c47f179329fddbe8af92b549a8b8",
     "pathSetSha256": "93a6809cb616abda08e0ace8ac71308a79d2a668935dd6695ca7e0ddac84df17",
     "files": [
       {
@@ -308,8 +308,8 @@
       },
       {
         "path": "frontend/app/battlepass.js",
-        "bytes": 14060,
-        "sha256": "699f6d7c21958c40e52933dd0750d5836e3f2045ff232111bb3e568ca7d067f6"
+        "bytes": 14032,
+        "sha256": "e259edde7ec33c6cffdc6b2ab4ba0b7fc7bb68a44233b3e324fdb548cbc4d6c0"
       },
       {
         "path": "frontend/app/beatcard.js",
