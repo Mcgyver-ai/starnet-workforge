@@ -1047,9 +1047,13 @@
         }
         // A gateway's web UI answers every non-API path with a 200 page (freellmapi at :31415 without /v1): a stream
         // parsed from HTML yields nothing, so the run ended silently. Name the endpoint and the likely fix instead.
+        // A base URL that already ends in a version path gets no "/v1" suggestion: that would read …/v1/v1.
         if (res.ok && /text\/html/i.test(String((res.headers && res.headers.get && res.headers.get('content-type')) || ''))) {
-          throw new Error(errLabel + ' returned a web page, not an API response, from ' + baseUrl + chatPath +
-            ' — the base URL most likely needs its API path (e.g. ' + baseUrl.replace(/\/+$/, '') + '/v1)');
+          const trimmedBase = baseUrl.replace(/\/+$/, '');
+          const fix = /\/v\d+$/i.test(trimmedBase)
+            ? ' — check that the base URL points at the API, not at a web app on that port'
+            : ' — the base URL most likely needs its API path (e.g. ' + trimmedBase + '/v1)';
+          throw new Error(errLabel + ' returned a web page, not an API response, from ' + baseUrl + chatPath + fix);
         }
         if (res.ok && res.body) {
           if (native) noteOllamaWindow(nativeBase, body.model, wire.numCtx);

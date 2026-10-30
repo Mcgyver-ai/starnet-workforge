@@ -23,5 +23,17 @@ async function collect(p, req) { const out = []; for await (const ev of p.stream
   let err = null; try { await collect(p, { model: 'm', messages: [{ role: 'user', content: 'x' }] }); } catch (e) { err = e; }
   A.ok(err && /web page/.test(err.message) && /31415\/v1/.test(err.message), 'a 200 HTML page instead of the API names the missing /v1');
 
+  const pv1 = makeOpenAICompatibleProvider({ fetch: html, baseUrl: 'http://127.0.0.1:31415/v1', key: 'k', label: 'FreeLLMAPI' });
+  err = null; try { await collect(pv1, { model: 'm', messages: [{ role: 'user', content: 'x' }] }); } catch (e) { err = e; }
+  A.ok(err && /web page/.test(err.message) && !/\/v1\/v1/.test(err.message), 'a base URL already on /v1 is not told to add another /v1');
+
+  // The gateway serves many vendors' ids as vendor/model: a refused one must not send the user to STARNET/OPENROUTER (#126).
+  const refused = async () => ({ ok: false, status: 404, headers: new Map([['content-type', 'application/json']]),
+    text: async () => '{"error":{"message":"model google/gemini-x not found"}}', json: async () => ({ error: { message: 'model google/gemini-x not found' } }) });
+  const gw = factory.selectProvider({ provider: 'freellmapi', fetch: refused, key: 'k' });
+  err = null; try { await collect(gw, { model: 'google/gemini-x', messages: [{ role: 'user', content: 'x' }] }); } catch (e) { err = e; }
+  A.ok(err && /404/.test(err.message), 'a refused model surfaces the 404');
+  A.ok(err && !/routed-catalog|Switch the provider/.test(err.message), 'a gateway\'s vendor/model id gets no switch-provider hint');
+
   A.report('provider.freellmapi.test');
 })().catch(e => { console.log('FAIL: provider.freellmapi.test threw -- ' + (e && e.stack || e)); process.exit(1); });
