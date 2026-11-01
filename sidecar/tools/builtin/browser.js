@@ -772,6 +772,12 @@
     for (const c of CHROME_CANDIDATES) { if (c.headless && exists(c)) return { path: c.path, headless: true }; }
     return null;
   }
+  /* A regex for a command line launched on exactly this profile: the path is escaped and must end at a space or the
+     line's end (Windows: or a closing quote), so a sweep of /tmp/p never reaches /tmp/p-held-x or /tmp/p-old.
+     win: .NET for PowerShell, whose 5.1 -Command drops a literal " (hence \x22); else POSIX ERE for pkill (no \x). */
+  function profileDirPattern(dir, win) {
+    return '--user-data-dir=' + String(dir).replace(/\\/g, '/').replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + (win ? '(\\x22| |$)' : '( |$)');
+  }
   // Back-compat shim (tests/other callers): return just the path of the first existing binary.
   function findChrome(existsSync) {
     const r = resolveChrome(false, existsSync);
@@ -1173,14 +1179,14 @@
     }
     async function killProfileOrphans(dir) {
       if (spawn !== CP.spawn || !dir) return;   // a test rig's fake spawn owns no real processes
-      const needle = String(dir).replace(/\\/g, '/');
+      const pattern = profileDirPattern(dir, process.platform === 'win32');
       try {
         if (process.platform === 'win32') {
-          const esc = needle.replace(/'/g, "''");
-          const ps = "Get-CimInstance Win32_Process | Where-Object { $_.ProcessId -ne $PID -and $_.CommandLine -and $_.CommandLine.Replace('\\','/') -like '*--user-data-dir=" + esc + "*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }";
+          // -match: case-insensitive, as Windows paths are
+          const ps = "Get-CimInstance Win32_Process | Where-Object { $_.ProcessId -ne $PID -and $_.CommandLine -and $_.CommandLine.Replace('\\','/') -match '" + pattern.replace(/'/g, "''") + "' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }";
           await runQuiet('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ps], 15000);
         } else {
-          await runQuiet('pkill', ['-f', '--', '--user-data-dir=' + needle], 5000);
+          await runQuiet('pkill', ['-f', '--', pattern], 5000);
         }
       } catch (e) { if (!(e && (e.code === 1 || e.status === 1))) failNote('browser.launch-retry.orphans', e); }   // pkill exits 1 when nothing matched
     }
@@ -4233,5 +4239,5 @@
     return { tools, session, register(reg) { tools.forEach(t => reg.register(t)); return reg; }, _internals: { assertSafeUrl, assertLoopbackUrl, assertResolvedSafe, isPrivateV4, isPrivateV6, makeBrowserSession, makeCdpDriver, makeDownloadLedger, findChrome, resolveChrome, headlessRequested, SYNTHETIC_INPUT_BOOTSTRAP, CHROME_CANDIDATES } };
   }
 
-  return { makeBrowserTools, _internals: { CdpClient, assertSafeUrl, assertLoopbackUrl, assertResolvedSafe, resolveVerified, isPrivateV4, isPrivateV6, makeBrowserSession, makeCdpDriver, makeDownloadLedger, findChrome, resolveChrome, setExtraChrome, needsNoSandbox, profileOwnerPid, macEditingCommands, headlessRequested, SYNTHETIC_INPUT_BOOTSTRAP, SETTLE_BOOTSTRAP, SETTLE_PROBE, SETTLE_QUIET_POLLS, describeResponse, pickRefusal, explainRefusal, jsLiteral, normalizeBrowserLocale, detectBrowserVersion, makeLaunchIdentity, browserVersionFrom, cleanBrandRows, makeCdpIdentity, CHROME_CANDIDATES } };
+  return { makeBrowserTools, _internals: { CdpClient, assertSafeUrl, assertLoopbackUrl, assertResolvedSafe, resolveVerified, isPrivateV4, isPrivateV6, makeBrowserSession, makeCdpDriver, makeDownloadLedger, findChrome, profileDirPattern, resolveChrome, setExtraChrome, needsNoSandbox, profileOwnerPid, macEditingCommands, headlessRequested, SYNTHETIC_INPUT_BOOTSTRAP, SETTLE_BOOTSTRAP, SETTLE_PROBE, SETTLE_QUIET_POLLS, describeResponse, pickRefusal, explainRefusal, jsLiteral, normalizeBrowserLocale, detectBrowserVersion, makeLaunchIdentity, browserVersionFrom, cleanBrandRows, makeCdpIdentity, CHROME_CANDIDATES } };
 });
