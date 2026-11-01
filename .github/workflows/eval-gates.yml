@@ -20,6 +20,10 @@ on:
   push:
     branches: [feat/harness-backend]
 
+env:
+  # onnxruntime-node would download its CUDA add-on from NuGet on install: no GPU here, and the download times out
+  ONNXRUNTIME_NODE_INSTALL: skip
+
 jobs:
   credential-free-evals:
     runs-on: ubuntu-latest

@@ -54,6 +54,10 @@ concurrency:
   group: floor-canaries-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
+env:
+  # onnxruntime-node would download its CUDA add-on from NuGet on install: no GPU here, and the download times out
+  ONNXRUNTIME_NODE_INSTALL: skip
+
 jobs:
   voice:
     runs-on: ubuntu-latest

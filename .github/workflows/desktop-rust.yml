@@ -24,6 +24,10 @@ concurrency:
   group: desktop-rust-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # onnxruntime-node would download its CUDA add-on from NuGet on install: no GPU here, and the download times out
+  ONNXRUNTIME_NODE_INSTALL: skip
+
 jobs:
   test:
     strategy:
