@@ -46,6 +46,8 @@ jobs:
   # Job 1 — gate: nothing builds unless the fast test suite is green.
   # -------------------------------------------------------------------------------------------
   gate:
+    # releases ship from the source repo only: on a fork (no signing secrets) every later job skips with this one
+    if: github.repository == 'androoAGI/starnet'
     runs-on: ubuntu-latest
     steps:
       # fetch-depth: 0 — the claims-authority test resolves the release-surface manifest's
