@@ -37,6 +37,10 @@ on:
   push:
     tags: ['v*']
 
+env:
+  # onnxruntime-node would download its CUDA add-on from NuGet on install: nothing uses it, and the download times out
+  ONNXRUNTIME_NODE_INSTALL: skip
+
 jobs:
   # -------------------------------------------------------------------------------------------
   # Job 1 — gate: nothing builds unless the fast test suite is green.

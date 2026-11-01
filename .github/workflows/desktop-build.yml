@@ -42,6 +42,10 @@ on:
   # No tag trigger: v* tags run release-train.yml (the shipping path). This workflow is for
   # manual test builds / shareable pre-releases only.
 
+env:
+  # onnxruntime-node would download its CUDA add-on from NuGet on install: nothing uses it, and the download times out
+  ONNXRUNTIME_NODE_INSTALL: skip
+
 jobs:
   build:
     strategy:

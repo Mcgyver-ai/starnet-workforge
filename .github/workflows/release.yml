@@ -43,6 +43,10 @@ on:
         required: false
         default: ""
 
+env:
+  # onnxruntime-node would download its CUDA add-on from NuGet on install: nothing uses it, and the download times out
+  ONNXRUNTIME_NODE_INSTALL: skip
+
 jobs:
   build:
     runs-on: windows-latest
