@@ -48,6 +48,8 @@ jobs:
   gate:
     # releases ship from the source repo only: on a fork (no signing secrets) every later job skips with this one
     if: github.repository == 'androoAGI/starnet'
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       # fetch-depth: 0 — the claims-authority test resolves the release-surface manifest's
