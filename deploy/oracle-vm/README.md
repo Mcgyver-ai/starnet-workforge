@@ -9,12 +9,16 @@ tunnel. No ingress rule, firewall change, or TLS certificate is needed, and noth
 - Image: Canonical Ubuntu 24.04 (or Oracle Linux 9). Shape: `VM.Standard.A1.Flex` (Always Free ARM) with
   2+ OCPU / 12+ GB RAM is comfortable; x86 shapes work too.
 - Add your SSH public key. Leave the default security list (port 22 only).
+- The subnet needs an **egress** rule to `0.0.0.0/0` (the default security list has one): setup downloads Node and
+  packages, and the station calls model providers. Check with `curl -sI https://github.com` on the VM — a timeout
+  means the egress rule is missing (VCN → subnet → security list → Add Egress Rule, all protocols).
 
 ## 2. Install
 
 ```bash
 ssh ubuntu@<vm-public-ip>
-git clone https://github.com/Mcgyver-ai/starnet-workforge.git starnet   # private repo: use a deploy key or `gh auth login`
+sudo apt-get update && sudo apt-get install -y git   # a fresh image has empty package lists and may lack git
+git clone https://github.com/Mcgyver-ai/starnet-workforge.git starnet
 cd starnet
 bash deploy/oracle-vm/setup.sh
 ```
