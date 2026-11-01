@@ -18,6 +18,7 @@ const path = require('path');
 const { bootToken } = require('./_httpToken.js');
 const cron = require('../sidecar/cron.js');
 const cronStore = require('../sidecar/cron-store.js');
+const { allocatePort, BIND_REFUSED } = require('./helpers/ports.js');
 
 const HOST = '127.0.0.1';
 const INDEX = path.resolve(__dirname, '..', 'sidecar', 'index.js');
@@ -40,9 +41,9 @@ function bootSidecar(port, workspaces, attempts) {
     const onData = d => {
       out += d.toString();
       if (!settled && out.includes('http://' + HOST + ':' + port)) { settled = true; resolve({ child, port, out: () => out }); }
-      if (!settled && /already in use/i.test(out)) {
+      if (!settled && BIND_REFUSED.test(out)) {
         settled = true; try { child.kill(); } catch (_) {}
-        if (attempts > 0) resolve(bootSidecar(port + 1, workspaces, attempts - 1));
+        if (attempts > 0) resolve(allocatePort().then(next => bootSidecar(next, workspaces, attempts - 1)));
         else reject(new Error('no free sidecar port'));
       }
     };
@@ -64,7 +65,7 @@ function bootSidecar(port, workspaces, attempts) {
   const t = (Date.now() - 180000) / 1000; fs.utimesSync(lock, t, t);
   let booted = null;
   try {
-    booted = await bootSidecar(9350 + (process.pid % 150), ws, 30);
+    booted = await bootSidecar(await allocatePort(), ws, 30);
     const B = 'http://' + HOST + ':' + booted.port;
     const token = await bootToken(B, B);
     let health = null;
@@ -75,6 +76,8 @@ function bootSidecar(port, workspaces, attempts) {
     }
     A.ok(health && health.lastSuccessAt != null, 'the scheduler ticks: a recycled-PID lockfile is reclaimed, not obeyed for 8 minutes — health ' + JSON.stringify(health));
     A.eq(/held by another live process/.test(booted.out()), false, 'the boot reconcile never claims another live process holds the lock');
+    // the routine's own tick/result line can land a moment after health first reports a success (a fast CI runner)
+    for (let i = 0; i < 40 && !/cron\.tick|cron\.result/.test(booted.out()); i++) await sleep(250);
     A.ok(/cron\.tick|cron\.result/.test(booted.out()), 'and the due routine was processed by a real tick');
     A.ok(!fs.existsSync(lock) || !fs.readFileSync(lock, 'utf8').startsWith(squatter.pid + ':'), 'the dead holder\'s stamp is gone');
   } finally {
