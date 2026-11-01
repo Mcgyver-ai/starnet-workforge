@@ -46,7 +46,8 @@ fi
 
 cd "$REPO_DIR"
 # as the service user even under `sudo bash setup.sh`, so later non-root updates can replace node_modules
-sudo -H -u "$RUN_USER" npm ci --omit=dev
+# onnxruntime-node would download its CUDA add-on from NuGet on an x64 VM: no GPU here, and the download can time out
+sudo -H -u "$RUN_USER" env ONNXRUNTIME_NODE_INSTALL=skip npm ci --omit=dev
 
 sudo tee /etc/systemd/system/starnet.service >/dev/null <<EOF
 [Unit]

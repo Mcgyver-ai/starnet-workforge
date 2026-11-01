@@ -44,7 +44,7 @@ For phone access without a tunnel, pair StarNet Remote from the app: the station
 | --- | --- |
 | Logs | `journalctl -u starnet -f` |
 | Restart | `sudo systemctl restart starnet` |
-| Update | `git pull && npm ci --omit=dev && sudo systemctl restart starnet` |
+| Update | `git pull && ONNXRUNTIME_NODE_INSTALL=skip npm ci --omit=dev && sudo systemctl restart starnet` |
 | Env overrides | `/etc/starnet/starnet.env` (`STARNET_PORT`, `STARNET_WORKSPACES`, …), then restart |
 | Back up data | `sudo systemctl stop starnet`, copy the workspaces directory (`~/.local/share/StarNet/workspaces` or your `STARNET_WORKSPACES`), then `sudo systemctl start starnet`. Copying while agents run is not a consistent recovery point. The copy includes the plaintext credentials above. |
 
