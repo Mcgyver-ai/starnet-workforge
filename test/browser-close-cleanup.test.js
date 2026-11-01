@@ -21,6 +21,7 @@ function rig(opts = {}) {
     proxyCloseResults: new WeakMap(),
     process: { platform: 'linux' }, spawn() {}, CP: { spawn() {} },
     killTree() { throw Error('No native process effects allowed'); },
+    async killProfileOrphans(dir) { calls.push('orphans:' + dir); },
     failNote: (tag, e) => notes.push({ tag, e }), swallow: () => () => {},
     setTimeout(fn, ms) { timers.push(ms); return setTimeout(fn, 0); }, clearTimeout,
     deps: { cleanupProfile: !opts.attached }, profileDir: '/owned/profile', heldFallbackDir: opts.fallback ? '/owned/fallback' : null,
@@ -66,7 +67,7 @@ async function uploadFixture(closeError, serverError) {
   const stuck = rig({ fallback: true });
   const error = await rejection(() => stuck.close());
   A.ok(error && /owned Chromium did not exit/.test(error.message), 'unproved exit still rejects with the shutdown error');
-  A.eq(stuck.calls, ['cdp.close', 'kill', 'proxy.close'], 'proxy cleanup runs after the failed owned-process wait');
+  A.eq(stuck.calls, ['cdp.close', 'kill', 'orphans:/owned/profile', 'proxy.close'], 'proxy cleanup runs after the failed owned-process wait');
   A.eq(stuck.removed, [], 'neither primary nor fallback profile is deleted on failure');
   A.eq(stuck.pid(), 4242, 'failed close retains the owned process handle');
   A.eq(stuck.timers, [8000], 'production exit timeout is unchanged (only the test scheduler is accelerated)');
@@ -133,6 +134,13 @@ async function uploadFixture(closeError, serverError) {
     'concurrent Chromium failures retain precedence over the shared proxy failure');
   A.eq(mixed.calls.filter(c => c === 'proxy.close').length, 1, 'concurrent double failure still invokes proxy cleanup once');
   A.eq(mixed.removed, [], 'concurrent double failure never removes the profile');
+  const killed = rig({ exits: true });
+  await killed.close();
+  A.eq(killed.calls.filter(c => c === 'kill' || c.startsWith('orphans:')), ['kill', 'orphans:/owned/profile'],
+    'a POSIX SIGKILL ends only the browser process, so close also ends its helpers still holding the profile');
+  const flushed = rig({ graceful: true, persistent: true });
+  await flushed.close();
+  A.ok(!flushed.calls.some(c => c.startsWith('orphans:')), 'a browser that exited on Browser.close is not swept');
   const replacement = rig({ exits: true });
   await replacement.close({ keepProfile: true });
   let replacementCloses = 0;

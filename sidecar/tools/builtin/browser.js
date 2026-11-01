@@ -2808,7 +2808,11 @@
         }
         try { cdp && cdp.close(); } catch (_) {}
         // only a process that has NOT exited is still ours to kill: an exited one's id may already be someone else's
-        if (owned && !exited && !procExited) { if (process.platform === 'win32' && owned.pid && spawn === CP.spawn) await killTree(owned.pid); else { try { owned.kill('SIGKILL'); } catch (e) { failNote('browser.close.kill', e); } } }
+        if (owned && !exited && !procExited) { if (process.platform === 'win32' && owned.pid && spawn === CP.spawn) await killTree(owned.pid); else {
+          try { owned.kill('SIGKILL'); } catch (e) { failNote('browser.close.kill', e); }
+          // SIGKILL ends only the browser process: its helpers (as taskkill /T ends on Windows) can live on, writing the profile
+          await killProfileOrphans(profileDir);
+        } }
         cdp = null;
         if (owned && waitForClose && !exited) {
           // a force-killed process can take seconds to leave on a busy Windows box (antivirus holding a freshly unpacked
