@@ -24,7 +24,7 @@ tauri-plugin-dialog = "2"
 keyring = { version = "3", features = ["windows-native", "apple-native", "linux-native", "sync-secret-service"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sha2 = "0.10"
+sha2 = "0.11"
 uuid = { version = "1", features = ["v4"] }
 # Redacting what the sidecar prints before it reaches sidecar.log (sidecar_output.rs). Already in the tree via tauri.
 regex = "1"
