@@ -37,13 +37,14 @@ if ! command -v node >/dev/null || [ "$(node -p 'process.versions.node.split("."
   fi
 fi
 
-# node-pty has no ARM64 Linux prebuild, so it compiles; git is what agents use for project work.
+# node-pty has no ARM64 Linux prebuild, so it compiles; git is what agents use for project work;
+# unzip unpacks the browser the station downloads on first start.
 if command -v apt-get >/dev/null; then
   # a fresh Oracle image has empty package lists, and NodeSource only refreshes them when Node was missing
   sudo apt-get update
-  sudo apt-get install -y build-essential python3 git
+  sudo apt-get install -y build-essential python3 git unzip
 else
-  sudo dnf install -y gcc-c++ make python3 git
+  sudo dnf install -y gcc-c++ make python3 git unzip
 fi
 
 cd "$REPO_DIR"
