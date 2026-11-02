@@ -39,6 +39,8 @@ fi
 
 # node-pty has no ARM64 Linux prebuild, so it compiles; git is what agents use for project work.
 if command -v apt-get >/dev/null; then
+  # a fresh Oracle image has empty package lists, and NodeSource only refreshes them when Node was missing
+  sudo apt-get update
   sudo apt-get install -y build-essential python3 git
 else
   sudo dnf install -y gcc-c++ make python3 git
@@ -46,7 +48,8 @@ fi
 
 cd "$REPO_DIR"
 # as the service user even under `sudo bash setup.sh`, so later non-root updates can replace node_modules
-sudo -H -u "$RUN_USER" npm ci --omit=dev
+# onnxruntime-node would download its CUDA add-on from NuGet on an x64 VM: no GPU here, and the download can time out
+sudo -H -u "$RUN_USER" env ONNXRUNTIME_NODE_INSTALL=skip npm ci --omit=dev
 
 sudo tee /etc/systemd/system/starnet.service >/dev/null <<EOF
 [Unit]

@@ -43,6 +43,10 @@ on:
         required: false
         default: ""
 
+env:
+  # onnxruntime-node would download its CUDA add-on from NuGet on install: nothing uses it, and the download times out
+  ONNXRUNTIME_NODE_INSTALL: skip
+
 jobs:
   build:
     runs-on: windows-latest
@@ -53,7 +57,11 @@ jobs:
         with:
           node-version: 22
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install the stable Rust toolchain
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
 
       - name: Install frontend/sidecar deps
         run: npm ci

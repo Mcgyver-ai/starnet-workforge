@@ -313,5 +313,32 @@ function fakeFs(files) {
     A.ok(/still running \(pid 300\)/.test(out.content) && /RESET STATION BROWSER/.test(out.content), 'and the agent is told the human recovery path: ' + out.content);
   }
 
+  /* ---- the force-kill sweep's pattern: exactly this profile, never one whose name only starts the same ---- */
+  {
+    const dir = '/tmp/starnet-browser-123';
+    const re = new RegExp(T.profileDirPattern(dir));
+    A.ok(re.test('chrome --type=renderer --user-data-dir=' + dir + ' --lang=en-US'), 'pattern: a helper on the profile matches');
+    A.ok(re.test('chrome --user-data-dir=' + dir), 'pattern: the profile as the last argument matches');
+    const win = new RegExp(T.profileDirPattern('C:\\Users\\Ann Lee\\p', true), 'i');
+    A.ok(win.test('chrome "--user-data-dir=c:/users/ann lee/P" --x'), 'pattern: a quoted Windows path (slashes normalized, any case) matches');
+    A.ok(!win.test('chrome "--user-data-dir=C:/Users/Ann Lee/p-old"'), 'pattern: Windows never reaches a -old profile either');
+    A.ok(!T.profileDirPattern('/p', true).includes('"'), 'pattern: no literal quote for PowerShell 5.1 -Command to drop');
+    A.ok(!re.test('chrome --user-data-dir=' + dir + '-held-ab12 --lang=en-US'), 'pattern: the held fallback profile is not swept');
+    A.ok(!new RegExp(T.profileDirPattern('/w/.browser-profile')).test('chrome --user-data-dir=/w/xbrowser-profile'), 'pattern: a dot in the path is literal');
+    if (process.platform !== 'win32') {
+      // the real pkill reads it as POSIX ERE: one process on the profile dies, one on the -held- fallback lives
+      const { spawn, execFileSync } = require('node:child_process');
+      const base = path.join(os.tmpdir(), 'sn-orphan-' + process.pid);
+      const live = d => spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)', '--', '--user-data-dir=' + d], { stdio: 'ignore' });
+      const exact = live(base), held = live(base + '-held-x');
+      const gone = p => new Promise(r => p.on('exit', () => r(true)));
+      await new Promise(r => setTimeout(r, 300));
+      execFileSync('pkill', ['-f', '--', T.profileDirPattern(base)]);
+      A.eq(await Promise.race([gone(exact), new Promise(r => setTimeout(() => r(false), 3000))]), true, 'pkill: the process on the profile is ended');
+      A.eq(held.exitCode, null, 'pkill: the process on the held fallback profile is still running');
+      held.kill();
+    }
+  }
+
   A.report('browser-orphans.test');
 })();

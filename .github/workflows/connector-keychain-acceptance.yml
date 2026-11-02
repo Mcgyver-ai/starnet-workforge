@@ -18,7 +18,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install the stable Rust toolchain
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
       - name: Compile production credential code in lightweight acceptance harness
         run: cargo build --locked --manifest-path test/native-connector-keychain/Cargo.toml
       - name: Pure policy and refusal guards (no native credential access)
@@ -80,7 +84,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install the stable Rust toolchain
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
       - name: Compile lightweight native component harness
         run: cargo build --locked --manifest-path test/native-connector-keychain/Cargo.toml
       - name: Pure policy and refusal guards (simulated errors, not Windows denial evidence)

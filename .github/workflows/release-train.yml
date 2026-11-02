@@ -37,11 +37,19 @@ on:
   push:
     tags: ['v*']
 
+env:
+  # onnxruntime-node would download its CUDA add-on from NuGet on install: nothing uses it, and the download times out
+  ONNXRUNTIME_NODE_INSTALL: skip
+
 jobs:
   # -------------------------------------------------------------------------------------------
   # Job 1 — gate: nothing builds unless the fast test suite is green.
   # -------------------------------------------------------------------------------------------
   gate:
+    # releases ship from the source repo only: on a fork (no signing secrets) every later job skips with this one
+    if: github.repository == 'androoAGI/starnet'
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       # fetch-depth: 0 — the claims-authority test resolves the release-surface manifest's
@@ -177,14 +185,24 @@ jobs:
         with:
           node-version: 22
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.rust-target }}
+      - name: Install the stable Rust toolchain
+        shell: bash
+        env:
+          RUST_TARGET: ${{ matrix.rust-target }}
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+          if [ -n "$RUST_TARGET" ]; then rustup target add "$RUST_TARGET"; fi
 
-      - uses: swatinem/rust-cache@v2
+      - uses: actions/cache@v4
         with:
-          workspaces: src-tauri
-          key: ${{ matrix.target }}
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            src-tauri/target
+          key: cargo-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-${{ matrix.target }}-
 
       - run: npm ci
 

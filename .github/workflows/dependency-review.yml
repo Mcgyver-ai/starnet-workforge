@@ -1,0 +1,24 @@
+name: dependency-review
+
+# Fails a PR that adds a dependency with a known high/critical vulnerability (npm and Cargo lockfiles).
+on:
+  pull_request:
+    paths:
+      - '**/package.json'
+      - '**/package-lock.json'
+      - '**/Cargo.toml'
+      - '**/Cargo.lock'
+      - .github/workflows/dependency-review.yml
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v5.0.0
+        with:
+          fail-on-severity: high
