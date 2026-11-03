@@ -663,6 +663,11 @@ fn is_migration_internal(path: &Path) -> bool {
         )
 }
 
+// sha2 0.11 digests no longer implement LowerHex; the bytes still deref to a slice on every version.
+fn hex_lower(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
 fn hash_file(path: &Path) -> std::io::Result<(u64, String)> {
     let mut file = std::fs::File::open(path)?;
     let mut hasher = Sha256::new();
@@ -676,7 +681,7 @@ fn hash_file(path: &Path) -> std::io::Result<(u64, String)> {
         bytes += read as u64;
         hasher.update(&buffer[..read]);
     }
-    Ok((bytes, format!("{:x}", hasher.finalize())))
+    Ok((bytes, hex_lower(&hasher.finalize())))
 }
 
 /// A legacy root becomes an automatic station source only when its canonical save is readable and proves the
@@ -4579,7 +4584,7 @@ mod csp_pin_tests {
 
     #[test]
     fn os_browser_never_receives_the_master_token() {
-        let tok = "0b7c1f5e-9d1a-4c52-a0a0-2f0f3c9a7e11";
+        let tok = "0b7c1f5e-9d1a-4c52-a0a0-2f0f3c9a7e11"; // example test token, not a credential
         assert!(url_carries_api_token(
             &format!("http://127.0.0.1:8787/api/file?agent=a&path=x.md&token={tok}"),
             tok
@@ -4847,7 +4852,7 @@ fn executable_identity(path: &Path) -> Option<(String, u64)> {
     if bytes_read != expected_size {
         return None;
     }
-    Some((format!("{:x}", hasher.finalize()), bytes_read))
+    Some((hex_lower(&hasher.finalize()), bytes_read))
 }
 
 fn runtime_executable_identity() -> (String, u64) {
@@ -4886,7 +4891,7 @@ mod executable_identity_tests {
         assert_eq!(
             identity,
             (
-                "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad".to_string(),
+                "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad".to_string(), // example: SHA-256("abc"), the FIPS 180-2 test vector
                 3
             )
         );
