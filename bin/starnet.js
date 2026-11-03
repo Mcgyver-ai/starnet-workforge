@@ -218,7 +218,7 @@ function makeClient(host, port) {
     if (token) return token;
     const r = await request('GET', '/', null, { noToken: true, timeoutMs: 8000 });
     if (r.ok && r.status === 200 && typeof r.text === 'string') {
-      const m = r.text.match(/window\.__STARNET_API_TOKEN__=("(?:\\.|[^"])*")/);
+      const m = r.text.match(/window\.__STARNET_API_TOKEN__=("(?:\\.|[^"\\])*")/);
       if (m) { try { token = String(JSON.parse(m[1]) || ''); } catch (_) {} }
     }
     return token;

@@ -99,9 +99,12 @@ function makeDevices(deps) {
   function startPairing(o) {
     sweepPairings();
     const st = stationKeys();
-    const bytes = randomBytes(CODE_LEN);
+    // rejection sampling: 256 is not a multiple of the alphabet, so bytes past the last full cycle would favour its head
+    const unbiased = 256 - (256 % CODE_ALPHABET.length);
     let code = '';
-    for (let i = 0; i < CODE_LEN; i++) code += CODE_ALPHABET[bytes[i] % CODE_ALPHABET.length];
+    while (code.length < CODE_LEN) {
+      for (const b of randomBytes(CODE_LEN)) if (b < unbiased && code.length < CODE_LEN) code += CODE_ALPHABET[b % CODE_ALPHABET.length];
+    }
     const p = { pairingId: 'pr_' + newId().replace(/-/g, '').slice(0, 16), code, name: cleanName(o && o.name), expiresAt: now() + PAIR_TTL_MS, tries: 0, used: false };
     pairings.set(p.pairingId, p);
     return { pairingId: p.pairingId, code, stationId: st.id, stationPub: st.publicRaw, fingerprint: C.fingerprint(st.publicRaw), expiresAt: p.expiresAt };
