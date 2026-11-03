@@ -46,6 +46,10 @@ env:
   # onnxruntime-node would download its CUDA add-on from NuGet on install: nothing uses it, and the download times out
   ONNXRUNTIME_NODE_INSTALL: skip
 
+# least privilege: nothing here writes with GITHUB_TOKEN (release steps use RELEASES_TOKEN)
+permissions:
+  contents: read
+
 jobs:
   build:
     strategy:
