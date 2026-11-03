@@ -401,7 +401,7 @@ const A = require('./_assert.js');
     A.ok(/-ArgumentList '\/S'/.test(yml), 'silent install');
     A.ok(/scripts\/qa\/packaged-lifecycle\.mjs/.test(yml), 'the workflow calls the reusable runner (no inline case logic)');
     A.ok(/--tag-feed-path=/.test(yml) && /--feed-must-match/.test(yml), 'updater smoke receives the tag feed + the pinned flag');
-    const upload = yml.slice(yml.indexOf('upload-artifact@v4'));
+    const upload = yml.slice(yml.search(/upload-artifact@v\d+/));
     A.ok(/if: always\(\)/.test(upload) && /if-no-files-found: error/.test(upload), 'receipt artifact is uploaded even on failure');
     const matrixStep = yml.split('Run the packaged-lifecycle matrix')[1].split('- name:')[0];
     A.ok(!/taskkill|Stop-Process/.test(matrixStep), 'no force-kill inside the matrix step (cleanup lives outside the assertions)');

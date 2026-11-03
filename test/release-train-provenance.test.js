@@ -41,7 +41,7 @@ const nextJobRel = afterBuild.search(/^  [a-z0-9_-]+:$/m); // first sibling job 
 const buildJob = nextJobRel === -1 ? afterBuild : afterBuild.slice(0, nextJobRel);
 
 // --- the build-job checkout must fetch full history + tags so `git describe --tags` resolves the tag ---
-const coIdx = buildJob.indexOf('uses: actions/checkout@v4');
+const coIdx = buildJob.search(/uses: actions\/checkout@v\d+/);
 A.ok(coIdx !== -1, 'build job has an actions/checkout step');
 // the checkout step spans until the next `- ` step marker at 6-space indent.
 const fromCheckout = buildJob.slice(coIdx);
@@ -53,7 +53,7 @@ A.ok(/fetch-depth:\s*0\b/.test(checkoutStep),
 A.ok(/ref:\s*\$\{\{ github\.event_name == 'workflow_dispatch' && inputs\.tag \|\| github\.ref \}\}/.test(checkoutStep),
   'manual recovery runs build the immutable requested tag instead of the workflow branch');
 const checkoutSteps = Array.from(
-  yml.matchAll(/^      - uses: actions\/checkout@v4\s*$([\s\S]*?)(?=^      - |^  [a-z0-9_-]+:|$(?![\s\S]))/gm),
+  yml.matchAll(/^      - uses: actions\/checkout@v\d+\s*$([\s\S]*?)(?=^      - |^  [a-z0-9_-]+:|$(?![\s\S]))/gm),
   row => row[0]
 );
 A.eq(checkoutSteps.length, 6, 'release train has the expected six source checkouts, including installed Intel acceptance');
