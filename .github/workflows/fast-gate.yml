@@ -28,8 +28,8 @@ env:
 
 jobs:
   gate:
-    runs-on: ubuntu-latest
-    # green runs take ~24m; 25 killed them blind. The test step's own deadline below ends first, with its failure list.
+    # green runs now take 24-30m and brush 35 on busy runners; the test step's own deadline below still ends first, with its failure list.
+    timeout-minutes: 45
     timeout-minutes: 35
     steps:
       # fetch-depth: 0 — the claims-authority test resolves the release-surface manifest's
