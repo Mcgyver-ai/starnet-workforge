@@ -518,6 +518,7 @@ const DESKTOP_SHELL = /^(1|true|yes|on)$/i.test(String(ENV('DESKTOP_SHELL') || '
 // the header (link/tab opens of /api/file + /workshop-run/, the SSE EventSource, the unload save beacon) present a
 // SCOPED, SHORT-LIVED ticket (./apitickets.js) — the master token in a URL is refused everywhere (2026-09-25).
 const apiauth = require('./apiauth.js');
+const runtimeKnobsRules = require('./runtime-knobs.js');   // pure env > saved > default precedence for the run ceilings
 const apitickets = require('./apitickets.js');
 const TICKET_GUARD = apitickets.replayGuard(4096);   // single-use registry for the once-only ticket kinds (sse, save)
 const { isAllowedApiOrigin, isAllowedHost, requiresApiToken, TAURI_ORIGINS } = apiauth;
@@ -837,15 +838,7 @@ let runtimeKnobs = (function loadRuntimeKnobsAtBoot() {
   // saveResilient writes a <file>.bak last-known-good snapshot; if the main file is torn/corrupt at boot, fall
   // back to that .bak instead of silently dropping every saved knob to env/default. (Inline .bak recovery — this
   // runs before loadResilient/readJsonResilient are usable due to declaration order, per the hardening plan.)
-  function parseKnobs(raw) {
-    const k = (raw && typeof raw === 'object' && raw.knobs && typeof raw.knobs === 'object') ? raw.knobs : {};
-    const out = {};
-    for (const key of ['maxIters', 'maxConcurrentAgents', 'consentTimeoutMs', 'cronTickMs', 'maxSubscriptionTokens', 'maxUnpricedTokens']) {
-      const v = k[key];
-      if (typeof v === 'number' && isFinite(v) && v >= 0) out[key] = Math.floor(v);
-    }
-    return out;
-  }
+  const { parseKnobs } = runtimeKnobsRules;
   try { return parseKnobs(JSON.parse(fs.readFileSync(RUNTIME_KNOBS_FILE, 'utf8'))); }
   catch (_) {
     try {
@@ -856,12 +849,8 @@ let runtimeKnobs = (function loadRuntimeKnobsAtBoot() {
   }
 })();
 // resolve a knob: explicit env (via ENV suffix) > saved override > built-in default. envSuffix null = no env for it.
-function resolveKnob(envSuffix, savedKey, def) {
-  if (envSuffix) { const e = ENV(envSuffix); if (e != null && String(e).trim() !== '' && Number(e) >= 0) return Math.floor(Number(e)); }
-  const s = runtimeKnobs[savedKey];
-  return (typeof s === 'number' && s >= 0) ? s : def;
-}
-function knobEnvLocked(envSuffix) { const e = envSuffix ? ENV(envSuffix) : null; return e != null && String(e).trim() !== '' && Number(e) >= 0; }
+function resolveKnob(envSuffix, savedKey, def) { return runtimeKnobsRules.resolveKnob(envSuffix ? ENV(envSuffix) : null, runtimeKnobs[savedKey], def); }
+function knobEnvLocked(envSuffix) { return runtimeKnobsRules.envSet(envSuffix ? ENV(envSuffix) : null); }
 
 // maxIters: optional per-run tool-turn ceiling. Default OFF (0); users/deploys may opt into one.
 // maxToolBytes: the per-run tool-output FLOOR — the effective cap scales with the model's context window

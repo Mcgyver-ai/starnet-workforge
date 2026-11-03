@@ -335,6 +335,7 @@ test/autopilot-threads.test.js
 test/autopilot-focus.test.js
 test/autopilot-focus-veto.test.js
 test/apiauth.test.js
+test/runtime-knobs.test.js
 test/peerowner.test.js
 test/provider-key-check.test.js
 test/custom-provider-model-id.test.js
