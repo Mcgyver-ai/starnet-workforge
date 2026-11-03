@@ -45,7 +45,8 @@ env.agent = { say: null };
 const t0 = Date.now();
 for (let k = 0; k < 20; k++) say(big + k);
 const spent = Date.now() - t0;
-A.ok(spent < 60, 'saying a 4 MB reply twenty times cost ' + spent + ' ms (folding all of it took ~175 ms a call)');
+// the O(reply) fold took ~3.5 s for these twenty; 60 ms tripped on busy CI runners (61-62 ms seen) without any regression
+A.ok(spent < 500, 'saying a 4 MB reply twenty times cost ' + spent + ' ms (folding all of it took ~175 ms a call)');
 A.eq(env.agent.say.text, old(big), 'and still shows its first 160 folded characters');
 
 /* ---------- 3. ambient remarks ---------- */
