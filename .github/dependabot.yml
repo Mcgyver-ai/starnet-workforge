@@ -24,5 +24,9 @@ updates:
       interval: monthly
     open-pull-requests-limit: 3
     groups:
+      # webview2-com must stay on wry's release line (src-tauri/Cargo.toml), so it moves with the tauri crates in one PR;
+      # bumped apart, either side breaks the build. 0.x minors count as breaking, hence no update-types filter here.
+      tauri-webview:
+        patterns: ['tauri', 'tauri-*', 'wry', 'webview2-com']
       cargo-minor-patch:
         update-types: [minor, patch]
