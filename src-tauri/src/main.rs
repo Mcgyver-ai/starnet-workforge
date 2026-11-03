@@ -4386,13 +4386,13 @@ mod artifact_open_tests {
     use std::path::Path;
 
     fn temp_root() -> std::path::PathBuf {
+        // a per-process counter: Windows' clock is coarse, so two tests starting together got the
+        // same folder and one's cleanup deleted the other's files
+        static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         std::env::temp_dir().join(format!(
             "starnet-artifact-open-{}-{}",
             std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|duration| duration.as_nanos())
-                .unwrap_or(0)
+            NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ))
     }
 
@@ -4407,7 +4407,7 @@ mod artifact_open_tests {
         std::fs::write(&escaped, b"outside").unwrap();
 
         let resolved = resolve_artifact_path(&workspaces, Some("nova"), "reports/handoff.md")
-            .expect("owned deliverable resolves");
+            .unwrap_or_else(|e| panic!("owned deliverable resolves: {e}"));
         assert_eq!(
             resolved,
             strip_verbatim(&std::fs::canonicalize(&owned).unwrap())
