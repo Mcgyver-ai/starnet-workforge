@@ -1,0 +1,36 @@
+# CodeQL (advanced setup, replacing GitHub's default setup) so .github/codeql/codeql-config.yml can leave out
+# tests and dev scripts. The categories match default setup's, so existing alerts carry over instead of duplicating.
+name: CodeQL
+
+on:
+  push:
+    branches: [feat/harness-backend]
+  pull_request:
+    branches: [feat/harness-backend]
+  schedule:
+    - cron: '23 4 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [actions, javascript-typescript, python, rust]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          config-file: ./.github/codeql/codeql-config.yml
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}

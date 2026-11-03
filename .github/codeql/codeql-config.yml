@@ -1,0 +1,9 @@
+# Scan what ships (sidecar, frontend, website, bin, src-tauri, workflows). Tests, proofs and dev scripts drive
+# headless browsers with page.evaluate strings and fixture regexes on purpose; scanned, they were 3/4 of all alerts.
+paths-ignore:
+  - test
+  - dev
+  - scripts
+  - qa
+  - docs
+  - website/app/app   # a copy of frontend/app (scripts/sync-website-app.mjs): scanned once, at its source
