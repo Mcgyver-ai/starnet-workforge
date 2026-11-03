@@ -68,7 +68,7 @@ function discoverToken() {
   tokenPromise = rawRequest('GET', '/', null, /* withToken */ false).then(res => {
     tokenPromise = null;
     if (res.ok && res.status === 200 && typeof res.text === 'string') {
-      const m = res.text.match(/window\.__STARNET_API_TOKEN__=("(?:\\.|[^"])*")/);
+      const m = res.text.match(/window\.__STARNET_API_TOKEN__=("(?:\\.|[^"\\])*")/);
       if (m) { try { cachedToken = String(JSON.parse(m[1]) || ''); } catch (_) {} }
     }
     return cachedToken;

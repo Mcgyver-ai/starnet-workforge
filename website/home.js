@@ -104,7 +104,11 @@
   if(scrub){
     var parts = scrub.textContent.split(/(\s+)/);
     scrub.setAttribute('aria-label', scrub.textContent);
-    scrub.innerHTML = parts.map(function(w){ return /^\s+$/.test(w) ? w : '<span class="w" aria-hidden="true">' + w + '</span>'; }).join('');
+    scrub.textContent = '';
+    parts.forEach(function(w){   // built as nodes: the words are text, never markup
+      if(/^\s+$/.test(w)){ scrub.appendChild(document.createTextNode(w)); return; }
+      var s = document.createElement('span'); s.className = 'w'; s.setAttribute('aria-hidden', 'true'); s.textContent = w; scrub.appendChild(s);
+    });
     words = Array.prototype.slice.call(scrub.querySelectorAll('.w'));
   }
 

@@ -450,7 +450,7 @@
         if (m) { const pkg = packageAt(baseDir); enqueue(pkg.scripts[m[1]], pkg.root); }
 
         const refs = [];
-        const interpreted = head.match(/^(?:(?:node|node\.exe|python|python\d*(?:\.exe)?|py(?:\.exe)?|ruby|php|tsx|ts-node|bun|deno|bash|sh)(?:\s+run)?)(?:\s+--?[A-Za-z0-9_-]+(?:=[^\s]+)?)*\s+(?!-[eEpP]\b)("[^"]+"|'[^']+'|[^\s&|;]+)/i);
+        const interpreted = head.match(/^(?:(?:node|node\.exe|python|python\d*(?:\.exe)?|py(?:\.exe)?|ruby|php|tsx|ts-node|bun|deno|bash|sh)(?:\s+run)?)(?:\s+-[A-Za-z0-9_-]+(?:=[^\s]+)?)*\s+(?!-[eEpP]\b)("[^"]+"|'[^']+'|[^\s&|;]+)/i);
         if (interpreted) refs.push(interpreted[1]);
         const ps = head.match(/^(?:powershell|pwsh)(?:\.exe)?\b[^&|;]*?\s-(?:file|f)\s+("[^"]+"|'[^']+'|[^\s&|;]+)/i);
         if (ps) refs.push(ps[1]);
