@@ -26,6 +26,6 @@ A.ok(/const CHECKPOINTS_ENABLED = checkpointsEnabledFromEnv\(ENV\('CHECKPOINTS'\
 const fsSrc = fs.readFileSync(path.join(__dirname, '..', 'sidecar', 'tools', 'builtin', 'fs.js'), 'utf8');
 A.ok(/ctx\.checkpointMutation\(base, 'fs mutation', \{ resolvedRoot: true \}\)/.test(fsSrc), 'fs writers snapshot through checkpointMutation without always:true');
 A.ok(/if \(!CHECKPOINTS_ENABLED && !\(opts2 && opts2\.always === true\)\) return null;/.test(src), 'checkpointMutation gates on CHECKPOINTS_ENABLED (default-on) unless always:true');
-A.ok(/catch \(_\) \{\}/.test(fsSrc.slice(fsSrc.indexOf("ctx.checkpointMutation(base, 'fs mutation'") - 20, fsSrc.indexOf("ctx.checkpointMutation(base, 'fs mutation'") + 120)), 'fs snapshot stays fail-open');
+A.ok(/catch \(e\) \{ failNote\('fs\.checkpoint\.before-write', e\); \}/.test(fsSrc.slice(fsSrc.indexOf("ctx.checkpointMutation(base, 'fs mutation'") - 20, fsSrc.indexOf("ctx.checkpointMutation(base, 'fs mutation'") + 160)), 'fs snapshot stays fail-open (reported, never thrown)');
 A.ok(/if \(environmentCheckpoints && mutatesWorkspace\(c\.name\) && !preciseCheckpoint && \(CHECKPOINTS_ENABLED \|\| \/\^\(shell\|verify\)\\.\/\.test\(c\.name\)\)\)/.test(src), 'the generic pre-tool hook also keys off CHECKPOINTS_ENABLED');
 A.report('checkpoint-default-on.test');
