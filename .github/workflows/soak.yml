@@ -50,6 +50,10 @@ on:
         required: false
         default: "0"
 
+# least privilege: nothing here writes with GITHUB_TOKEN (release steps use RELEASES_TOKEN)
+permissions:
+  contents: read
+
 jobs:
   # Expressions cannot do arithmetic, so a tiny job turns `minutes` into the soak job's timeout
   # (minutes + 30 of boot/teardown slack). A 20-minute smoke therefore cannot hang for six hours.
