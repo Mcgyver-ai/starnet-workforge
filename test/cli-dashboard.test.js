@@ -469,7 +469,8 @@ function screen(m, ui, cols, rows, now) { return tui.render(m, Object.assign({ f
   A.eq(folder.trustedRoot('C:\\Code', [{ root: 'C:\\Code', blessed: false }], W), '', 'a project whose trust was removed is not trusted');
 
   const real = p => fs.realpathSync.native(p);
-  const t1 = folder.locate({ cwd: deep, projects: [] }, { home: tmp });
+  // no OS folders: a TEMP inside C:\Windows would rightly read as 'system', which skipReason's own rows already cover
+  const t1 = folder.locate({ cwd: deep, projects: [] }, { home: tmp, env: { SystemRoot: path.join(tmp, 'no-os') } });
   A.eq([t1.folder, t1.root, t1.trusted, t1.skip], [real(deep), real(proj), '', ''], 'not trusted yet: the project to ask about, from the folder you are in');
   const t2 = folder.locate({ cwd: deep, projects: [{ root: real(proj), blessed: true }] }, { home: tmp });
   A.eq(t2.trusted, real(proj), 'trusted: every message works there, no card');
