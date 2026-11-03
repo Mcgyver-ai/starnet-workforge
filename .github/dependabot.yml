@@ -14,6 +14,11 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 3
+    # undici 7+ needs Node >=20.18 (8: >=22.19) against engines >=18, and its Agent stops fitting Node's built-in
+    # fetch (the Groq Whisper upload broke on #9). Stay on 6.x patches until the Node floor is raised on purpose.
+    ignore:
+      - dependency-name: undici
+        update-types: ['version-update:semver-major']
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
@@ -24,5 +29,9 @@ updates:
       interval: monthly
     open-pull-requests-limit: 3
     groups:
+      # webview2-com must stay on wry's release line (src-tauri/Cargo.toml), so it moves with the tauri crates in one PR;
+      # bumped apart, either side breaks the build. 0.x minors count as breaking, hence no update-types filter here.
+      tauri-webview:
+        patterns: ['tauri', 'tauri-*', 'wry', 'webview2-com']
       cargo-minor-patch:
         update-types: [minor, patch]
