@@ -250,7 +250,8 @@ const { note: failNote } = require('../../failopen');
     async function checkpointResolvedRoot(base, opts) {
       const ctx = opts && opts.ctx;
       if (!ctx || typeof ctx.checkpointMutation !== 'function' || (opts && opts.scope) !== 'write') return;
-      try { await ctx.checkpointMutation(base, 'fs mutation', { resolvedRoot: true }); } catch (_) {}
+      try { await ctx.checkpointMutation(base, 'fs mutation', { resolvedRoot: true }); }
+      catch (e) { failNote('fs.checkpoint.before-write', e); }   // the write still runs, but a missing undo point must be visible
     }
     // Resolve a path and PROVE it is reachable. A relative path in a host-validated project session is rooted
     // at that exact project, not at the agent's private deliverables workspace. It still passes through the

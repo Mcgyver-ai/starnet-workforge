@@ -48,9 +48,19 @@ For phone access without a tunnel, pair StarNet Remote from the app: the station
 | --- | --- |
 | Logs | `journalctl -u starnet -f` |
 | Restart | `sudo systemctl restart starnet` |
-| Update | `git pull && ONNXRUNTIME_NODE_INSTALL=skip npm ci --omit=dev && sudo systemctl restart starnet` |
+| Update | Automatic: `starnet-update.timer` runs `deploy/oracle-vm/auto-update.sh` every 15 min (see below) |
+| Update now | `sudo systemctl start starnet-update` then `journalctl -u starnet-update -n 20` |
 | Env overrides | `/etc/starnet/starnet.env` (`STARNET_PORT`, `STARNET_WORKSPACES`, …), then restart |
 | Back up data | `sudo systemctl stop starnet`, copy the workspaces directory (`~/.local/share/StarNet/workspaces` or your `STARNET_WORKSPACES`), then `sudo systemctl start starnet`. Copying while agents run is not a consistent recovery point. The copy includes the plaintext credentials above. |
+
+## Automatic updates
+
+`setup.sh` installs `starnet-update.timer`. Every 15 minutes it fetches the branch the checkout is on and, only when
+every GitHub check on the new commit has passed, fast-forwards, runs `npm ci` if `package-lock.json` changed,
+restarts the station, and rolls back to the previous commit if `/api/health` does not answer within 30 s. It pulls;
+nothing in GitHub can reach the VM. It needs `gh auth login` on the VM to read the check results, and it refuses to
+update over local edits or a non-fast-forward. A restart interrupts runs in flight (the station resumes journaled
+runs on boot). Turn it off with `sudo systemctl disable --now starnet-update.timer`.
 
 Agents run tools as the service user with that user's file access, so give the VM its own user and keys —
 don't reuse credentials you would not hand to the agents.

@@ -42,7 +42,7 @@ const FILE = path.join(dir, 'runtime.knobs.json');
 function boot(env) {
   const ctx = vm.createContext({
     fs, console: { warn: () => {} }, Object, Number, String, JSON, Math, isFinite,
-    RUNTIME_KNOBS_FILE: FILE,
+    RUNTIME_KNOBS_FILE: FILE, runtimeKnobsRules: require('../sidecar/runtime-knobs.js'),
     ENV: suffix => (env || {})[suffix],
     CONSENT_TIMEOUT_MS: 120000, CONSENT_ACK_EXTEND_MS: 600000,
     saveResilient: (file, value) => fs.writeFileSync(file, JSON.stringify(value)),

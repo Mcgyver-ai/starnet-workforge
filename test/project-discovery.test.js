@@ -7,7 +7,8 @@ const path = require('path');
 const { makeProjectDiscovery } = require('../sidecar/project-discovery.js');
 
 (async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'starnet-project-discovery-'));
+  // real spelling: discovery reports canonical paths, and a TEMP like C:\WINDOWS\TEMP is really C:\Windows\Temp
+  const root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'starnet-project-discovery-')));
   try {
     const shelf = path.join(root, 'Projects');
     const nodeProject = path.join(shelf, 'alpha');

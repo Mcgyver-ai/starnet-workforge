@@ -7,7 +7,7 @@
    (`agy -p`) is Google's documented way to drive the agent from scripts, and StarNet never reads, stores or forwards
    the credential: the CLI keeps its own sign-in, exactly like the Claude CLI provider (claude-cli.js).
 
-   ONE TURN = ONE CHILD. Each turn spawns `agy --input-format stream-json --output-format stream-json -p` with the
+   ONE TURN = ONE CHILD. Each turn spawns `agy --input-format stream-json --output-format stream-json` with the
    whole transcript as ONE stream-json user line on stdin (antigravity.google/docs/cli/headless). Output events:
      {"event":"init", "conversation_id", "init":{cwd, tools, permission_mode, model?}}
      {"event":"step_update", "step_update":{step_type, state, text_delta?, tool_name?, tool_info?, usage?}}
@@ -85,6 +85,7 @@
   function parseModels(stdout) {
     const out = [], seen = new Set();
     for (let line of String(stdout || '').replace(ANSI_RE, '').split(/\r?\n/)) {
+      line = line.split('\t')[0];   // agy 1.4+ prints `slug<TAB>Display Name`: the slug is what --model takes
       line = line.replace(/^\s*(?:[-*•>›✓✔●○]\s+|\d+[.)]\s+)/, '').replace(/\s+\((?:default|current|selected|active)\)\s*$/i, '').trim();
       if (!line || /:$/.test(line) || /^(?:available models|models|usage\b)/i.test(line) || line.length > 120) continue;
       if (seen.has(line)) continue;
@@ -320,12 +321,11 @@
 
     const effortOf = req => { const e = String(req.reasoningEffort || '').trim().toLowerCase(); return EFFORTS.indexOf(e) >= 0 ? e : ''; };
     function cliArgs(req) {
-      // -p last: it may take a value, and with stream-json input the prompt is on stdin
+      // no -p: stream-json input already runs headless off stdin, and agy 1.4+ rejects a bare -p ("flag needs an argument")
       const args = ['--input-format', 'stream-json', '--output-format', 'stream-json', '--sandbox', '--disable-slash-commands'];
       if (req.model) args.push('--model', String(req.model));
       const effort = effortOf(req);
       if (effort) args.push('--effort', effort);
-      args.push('-p');
       return args;
     }
 

@@ -71,7 +71,7 @@ const TOOLS = [{ type: 'function', function: { name: 'fs_read', description: 're
     const evs = await collect(p, { model: 'Gemini 3.1 Pro (High)', reasoningEffort: 'high', messages: [{ role: 'system', content: 'be brief' }, { role: 'user', content: 'hi' }] });
     const args = calls[0].args;
     A.eq(args.slice(0, 4), ['--input-format', 'stream-json', '--output-format', 'stream-json'], 'stream-json in and out');
-    A.eq(args[args.length - 1], '-p', 'headless print mode, last (the prompt is on stdin)');
+    A.ok(args.indexOf('-p') < 0 && args.indexOf('--print') < 0, 'no -p: stream-json input is headless off stdin, and agy 1.4+ rejects a bare -p');
     A.ok(args.indexOf('--sandbox') >= 0 && args.indexOf('--disable-slash-commands') >= 0, 'sandboxed, no slash commands');
     A.ok(args.indexOf('--dangerously-skip-permissions') < 0 && args.indexOf('--mode') < 0, 'never auto-approves agy\'s own tools');
     A.eq(args[args.indexOf('--model') + 1], 'Gemini 3.1 Pro (High)', 'a display-string slug passes through as one argv entry');
@@ -153,6 +153,8 @@ const TOOLS = [{ type: 'function', function: { name: 'fs_read', description: 're
   {
     A.eq(_internals.parseModels('Available models:\n  * Gemini 3.1 Pro (High) (current)\n  - Claude Opus 5.5 (Thinking)\n\u001b[2mGemini 3.8 Flash\u001b[0m\n'),
       ['Gemini 3.1 Pro (High)', 'Claude Opus 5.5 (Thinking)', 'Gemini 3.8 Flash'], 'parseModels keeps slugs exactly');
+    A.eq(_internals.parseModels('gemini-4-argon-medium\tGemini 4 Argon (Medium)\nclaude-opus-5-5-high\tClaude Opus 5.5 (High)\n'),
+      ['gemini-4-argon-medium', 'claude-opus-5-5-high'], 'agy 1.4+ `slug<TAB>name` lines keep only the slug');
     const { p, calls } = make({ stdout: 'Gemini 3.8 Flash\nClaude Sonnet 5.5 (Thinking)\n' });
     const models = await p.listModels();
     A.eq(calls[0].args, ['models'], 'the catalog comes from `agy models`');

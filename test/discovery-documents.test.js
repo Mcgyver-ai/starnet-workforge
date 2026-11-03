@@ -10,7 +10,8 @@ const { makeDocumentDiscovery, POLICY } = require('../sidecar/discovery-document
 const FailOpen = require('../sidecar/failopen.js');
 
 (async () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'starnet-doc-discovery-'));
+  // real spelling: the adapter checks grants against the canonical path, and a TEMP like C:\WINDOWS\TEMP is really C:\Windows\Temp
+  const root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'starnet-doc-discovery-')));
   let granted = true;
   const adapter = makeDocumentDiscovery({ fsp, path, hash: s => crypto.createHash('sha256').update(s).digest('hex'), isBlessed: r => granted && r === root });
   const now = Date.now(), source = { id: 'client-update', root, enabled: true };

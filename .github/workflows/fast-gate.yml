@@ -29,7 +29,8 @@ env:
 jobs:
   gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # green runs take ~24m; 25 killed them blind. The test step's own deadline below ends first, with its failure list.
+    timeout-minutes: 35
     steps:
       # fetch-depth: 0 — the claims-authority test resolves the release-surface manifest's
       # sourceCommit against the object store; a shallow checkout reads BLOCKED on a green trunk.
@@ -96,7 +97,7 @@ jobs:
           echo "::notice::Warm Chrome CDP answered within the tests' 10s budget."
 
       - name: Fast test gate
-        run: npm run test:fast
+        run: node scripts/timeout.mjs --label test:fast --timeout=1800000 -- node scripts/run-fast-tests.mjs --deadline=1680000
 
       - name: Customer journey regression gate
         run: npm run qa:customer-journeys
