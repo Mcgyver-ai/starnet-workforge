@@ -68,20 +68,20 @@ jobs:
       SIDECAR_ENTRY: ${{ inputs.sidecar_entry || 'sidecar/index.js' }}
     steps:
       # the ref UNDER TEST (a release tag on a recovery dispatch): its sidecar is what the canary boots
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.ref }}
 
       # the canary SCRIPT comes from the commit this workflow runs from, never from the ref under test: a recovery
       # dispatch of the release train for a tag cut before the canary existed still checks that tag's sidecar,
       # instead of failing on a missing script and leaving stage-draft unreachable
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.workflow_sha || github.sha }}
           path: .canary-tool
           sparse-checkout: scripts/canary
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -100,7 +100,7 @@ jobs:
 
       - name: Keep the verdict
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: voice-floor-canary-${{ github.run_id }}
           path: canary/voice-floor.json

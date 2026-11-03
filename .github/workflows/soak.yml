@@ -74,9 +74,9 @@ jobs:
     # GitHub caps a hosted job at 360 min; a soak longer than ~330 min needs a self-hosted runner.
     timeout-minutes: ${{ fromJSON(needs.plan.outputs.timeout) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -95,7 +95,7 @@ jobs:
         run: |
           if [ -f soak-out/SUMMARY.md ]; then cat soak-out/SUMMARY.md >> "$GITHUB_STEP_SUMMARY"; else echo "no receipt written" >> "$GITHUB_STEP_SUMMARY"; fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: soak-receipt-${{ inputs.minutes }}m-${{ github.run_id }}
@@ -115,9 +115,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -136,7 +136,7 @@ jobs:
         run: |
           if [ -f scale-out/SUMMARY.md ]; then cat scale-out/SUMMARY.md >> "$GITHUB_STEP_SUMMARY"; else echo "no scale receipt written" >> "$GITHUB_STEP_SUMMARY"; fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: soak-scale-receipt-${{ github.run_id }}

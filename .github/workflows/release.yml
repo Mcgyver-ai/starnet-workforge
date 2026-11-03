@@ -55,9 +55,9 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -84,7 +84,7 @@ jobs:
           "version=$v" >> $env:GITHUB_OUTPUT
 
       - name: Upload build artifacts (always)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: starnet-v${{ steps.ver.outputs.version }}
           path: |

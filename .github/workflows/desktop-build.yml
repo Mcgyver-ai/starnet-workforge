@@ -78,9 +78,9 @@ jobs:
             rust-target: x86_64-apple-darwin
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -100,7 +100,7 @@ jobs:
           rustup default stable
           if [ -n "$RUST_TARGET" ]; then rustup target add "$RUST_TARGET"; fi
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry/index
@@ -234,7 +234,7 @@ jobs:
       # a retry; the app is never rebuilt or submitted again.
       - name: Upload macOS notarization input
         if: runner.os == 'macOS' && hashFiles('notary-submission.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: notarization-input-${{ matrix.target }}
           if-no-files-found: error
@@ -249,7 +249,7 @@ jobs:
 
       - name: Upload distributable artifacts
         if: runner.os != 'macOS' || hashFiles('notary-submission.json') == ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: starnet-${{ matrix.target }}
           if-no-files-found: error
@@ -278,13 +278,13 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 350
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Missing input means this was an intentionally unsigned internal build. The
       # download is allowed to fail and the remaining steps skip cleanly.
       - name: Download submitted DMG
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: notarization-input-${{ matrix.target }}
           path: notarization-input
@@ -303,7 +303,7 @@ jobs:
 
       - name: Upload notarized distributable
         if: hashFiles('notarization-input/notary-submission.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: starnet-${{ matrix.target }}
           if-no-files-found: error
@@ -317,10 +317,10 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Download Intel macOS distributable
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: starnet-darwin-x64
           path: intel-distributable
@@ -335,7 +335,7 @@ jobs:
           bash scripts/verify-macos-intel-installed.sh "$dmg" intel-macos-installed-acceptance.json
 
       - name: Upload Intel installed-app receipt
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: intel-macos-installed-acceptance
           if-no-files-found: error
@@ -346,9 +346,9 @@ jobs:
     needs: [build, notarize-macos, intel-macos-installed-acceptance]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: starnet-*
           path: dist

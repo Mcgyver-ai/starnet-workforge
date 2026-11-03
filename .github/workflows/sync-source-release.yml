@@ -27,7 +27,7 @@ jobs:
       DISTRIBUTION_REPO: androoAGI/starnet-releases
       SOURCE_REPO: ${{ github.repository }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Read the latest published distribution release
         shell: bash
