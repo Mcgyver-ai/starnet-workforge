@@ -17,9 +17,10 @@ const releaseCi = read('.github/workflows/release-train.yml');
 const canary = read('scripts/update-canary.mjs');
 const phase5Surface = read('scripts/phase5-surface-proof.mjs');
 
-assert.equal(
-  pkg.dependencies['ogg-opus-decoder'],
-  '^1.7.3',
+// the decoder's major line, not its patch: a pinned '^1.7.3' failed every Dependabot patch bump
+assert.match(
+  String(pkg.dependencies['ogg-opus-decoder']),
+  /^\^1\.\d+\.\d+$/,
   'the packaged sidecar carries an in-process Telegram Ogg/Opus decoder'
 );
 assert.equal(pkg.overrides && pkg.overrides.sharp, '0.35.5',
