@@ -14,6 +14,11 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 3
+    # undici 7+ needs Node >=20.18 (8: >=22.19) against engines >=18, and its Agent stops fitting Node's built-in
+    # fetch (the Groq Whisper upload broke on #9). Stay on 6.x patches until the Node floor is raised on purpose.
+    ignore:
+      - dependency-name: undici
+        update-types: ['version-update:semver-major']
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
