@@ -74,7 +74,36 @@ PrivateTmp=true
 WantedBy=multi-user.target
 EOF
 
+# Auto-update: every 15 min, fast-forward to the branch's CI-green head and restart (deploy/oracle-vm/auto-update.sh).
+# Turn off with: sudo systemctl disable --now starnet-update.timer
+sudo tee /etc/systemd/system/starnet-update.service >/dev/null <<EOF
+[Unit]
+Description=StarNet station update (fast-forward to the CI-green branch head)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=${RUN_USER}
+WorkingDirectory=${REPO_DIR}
+Environment=PATH=$(dirname "$(command -v node)"):/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env bash ${REPO_DIR}/deploy/oracle-vm/auto-update.sh
+EOF
+sudo tee /etc/systemd/system/starnet-update.timer >/dev/null <<EOF
+[Unit]
+Description=Check for StarNet station updates every 15 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target
+EOF
+
 sudo systemctl daemon-reload
+sudo systemctl enable --now starnet-update.timer
 sudo systemctl enable starnet
 sudo systemctl restart starnet   # a re-run must pick up new code, unit and env, not keep the old process
 

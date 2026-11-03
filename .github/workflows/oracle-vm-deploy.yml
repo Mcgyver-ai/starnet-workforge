@@ -39,14 +39,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Lint setup.sh
-        run: shellcheck deploy/oracle-vm/setup.sh
+      - name: Lint the deploy scripts
+        run: shellcheck deploy/oracle-vm/setup.sh deploy/oracle-vm/auto-update.sh
 
       - name: Run setup.sh
         run: bash deploy/oracle-vm/setup.sh
 
       - name: Station is a running systemd service
         run: systemctl is-active starnet
+
+      - name: Update timer is installed and armed
+        run: |
+          set -euo pipefail
+          systemctl is-enabled starnet-update.timer
+          systemctl is-active starnet-update.timer
+          systemd-analyze verify /etc/systemd/system/starnet-update.service /etc/systemd/system/starnet-update.timer
 
       - name: Station listens on loopback only
         run: |
