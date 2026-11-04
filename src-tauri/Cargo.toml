@@ -4,7 +4,7 @@ version = "0.14.1"
 description = "StarNet native desktop shell for the gamified AI-agent harness"
 authors = ["StarNet"]
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.90"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
