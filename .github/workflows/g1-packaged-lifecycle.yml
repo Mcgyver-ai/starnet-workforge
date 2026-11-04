@@ -59,10 +59,10 @@ jobs:
       TARGET_TAG: ${{ inputs.tag }}
       BASELINE_TAG: ${{ inputs.baseline_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Acquire the exact public baseline and current installers
@@ -96,7 +96,7 @@ jobs:
         env:
           PROOF_AUTOMATIC_UPDATE: "true"
         run: node scripts/qa/public-upgrade-continuity.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: public-updater-canary
@@ -112,9 +112,9 @@ jobs:
     env:
       REPO: androoAGI/starnet-releases
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -198,7 +198,7 @@ jobs:
           # leave the runner clean even on failure (cleanup only — assertions never use taskkill)
           if (Get-Process skynet-desktop -ErrorAction SilentlyContinue) { taskkill /IM skynet-desktop.exe /T /F | Out-Null }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: packaged-lifecycle-${{ env.TAG }}
@@ -214,9 +214,9 @@ jobs:
       REPO: androoAGI/starnet-releases
       CASES: ${{ inputs.cases }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -274,7 +274,7 @@ jobs:
           # leave the runner clean even on failure (cleanup only — assertions never kill)
           pkill -9 -f "/Applications/StarNet.app/" || true
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: packaged-lifecycle-macos-${{ env.TAG }}

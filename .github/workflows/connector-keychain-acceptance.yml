@@ -14,8 +14,8 @@ jobs:
     env:
       STARNET_DISPOSABLE_KEYCHAIN: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Install the stable Rust toolchain
@@ -68,7 +68,7 @@ jobs:
         run: test/native-connector-keychain/target/debug/starnet-connector-keychain-acceptance cleanup
       - name: Preserve native component evidence, including failures
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: connector-keychain-${{ matrix.os }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/starnet-connector-keychain-${{ env.STARNET_ACCEPTANCE_RUN_ID }}/
@@ -80,8 +80,8 @@ jobs:
     env:
       STARNET_DISPOSABLE_KEYCHAIN: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Install the stable Rust toolchain
@@ -130,7 +130,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Owned synthetic entry cleanup failed; evidence retained' }
       - name: Preserve native component evidence, including failures
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: connector-keychain-windows-${{ github.run_attempt }}
           path: ${{ runner.temp }}/starnet-connector-keychain-${{ env.STARNET_ACCEPTANCE_RUN_ID }}/

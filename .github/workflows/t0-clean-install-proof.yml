@@ -176,7 +176,7 @@ jobs:
           $doc | ConvertTo-Json -Depth 6 | Out-File clean-install-proof.json -Encoding utf8
           Get-Content clean-install-proof.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: clean-install-proof-${{ inputs.tag }}
           if-no-files-found: error
@@ -185,14 +185,14 @@ jobs:
       # The clean-machine proof above runs before checkout or setup-node. Once it is
       # captured, also exercise the actual shell close/reopen cases on this disposable VM.
       # Updater feed acceptance remains owed against the eventual staged draft.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: inputs.build_run_id != ''
         with:
           # The verifier may be newer than the installer. Resolve the installer's
           # exact source tree for the installed-smoke identity check.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: inputs.build_run_id != ''
         with:
           node-version: 22
@@ -272,7 +272,7 @@ jobs:
           if (Test-Path .dogfood/session-reliability/live.json) { Copy-Item -LiteralPath .dogfood/session-reliability/live.json -Destination candidate-evidence/session-continuity.json }
           if (Test-Path qa/installed) { Copy-Item -LiteralPath qa/installed -Destination candidate-evidence/installed-smoke -Recurse }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && inputs.build_run_id != ''
         with:
           name: candidate-shell-lifecycle
