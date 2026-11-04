@@ -168,11 +168,11 @@
     "@tauri-apps/cli": "^2"
   },
   "dependencies": {
-    "@huggingface/transformers": "^4.2.0",
+    "@huggingface/transformers": "^4.3.2",
     "ajv": "8.20.0",
     "kokoro-js": "^1.2.1",
     "node-pty": "^1.1.0",
-    "ogg-opus-decoder": "^1.7.3",
+    "ogg-opus-decoder": "^1.7.5",
     "undici": "^6.29.1"
   },
   "overrides": {
