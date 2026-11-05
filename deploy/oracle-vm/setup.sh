@@ -47,6 +47,22 @@ else
   sudo dnf install -y gcc-c++ make python3 git unzip
 fi
 
+# gh is how auto-update.sh reads CI results; these are GitHub's own package repos (cli.github.com)
+if ! command -v gh >/dev/null; then
+  if command -v apt-get >/dev/null; then
+    sudo mkdir -p -m 755 /etc/apt/keyrings
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+    sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+    sudo apt-get update
+    sudo apt-get install -y gh
+  else
+    sudo dnf install -y 'dnf-command(config-manager)'
+    sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+    sudo dnf install -y gh
+  fi
+fi
+
 cd "$REPO_DIR"
 # as the service user even under `sudo bash setup.sh`, so later non-root updates can replace node_modules
 # onnxruntime-node would download its CUDA add-on from NuGet on an x64 VM: no GPU here, and the download can time out
@@ -111,6 +127,7 @@ sudo systemctl restart starnet   # a re-run must pick up new code, unit and env,
 for _ in $(seq 1 30); do
   if curl -fs -o /dev/null "http://127.0.0.1:${PORT}/api/health"; then
     echo "StarNet is up on 127.0.0.1:${PORT}. From your PC:  ssh -N -L ${PORT}:127.0.0.1:${PORT} ${RUN_USER}@<vm-public-ip>"
+    sudo -H -u "$RUN_USER" gh auth status >/dev/null 2>&1 || echo "Automatic updates will fail until you sign in on this VM:  gh auth login" >&2
     exit 0
   fi
   sleep 1
