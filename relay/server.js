@@ -296,7 +296,7 @@ function makeRelay(opts) {
     return new Promise((resolve) => server.close(() => resolve()));
   }
 
-  return { listen, close, server, _stations: stations };
+  return { listen, close, server, _stations: stations, _queuedBytes: () => wss.queuedBytes() };
 }
 
 /* addrKey(ip) — the key every per-address limit counts under. An IPv6 host usually holds a whole /64, so keyed on the
