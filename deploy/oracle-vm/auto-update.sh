@@ -24,6 +24,11 @@ NEW="$(git rev-parse FETCH_HEAD)"
 [ "$OLD" = "$NEW" ] && { echo "up to date at ${OLD:0:9}"; exit 0; }
 git merge-base --is-ancestor "$OLD" "$NEW" || { echo "origin/$BRANCH is not a fast-forward of ${OLD:0:9}: fix by hand" >&2; exit 1; }
 
+# A commit that failed here is not tried again: each try restarts the station twice and interrupts running agents.
+# shortcut: a one-off failure (npm's network, say) also skips that commit until a newer one lands or this file is removed; add a retry count if that bites
+FAILED_FILE="$(git rev-parse --git-path starnet-failed-commit)"
+[ "$(cat "$FAILED_FILE" 2>/dev/null || true)" = "$NEW" ] && { echo "${NEW:0:9} failed here before — staying on ${OLD:0:9} until a newer commit (or: rm $REPO_DIR/$FAILED_FILE)"; exit 0; }
+
 # owner/repo from the origin URL (https or ssh form)
 SLUG="$(git remote get-url origin | sed -E 's#^(https://github\.com/|git@github\.com:)##; s#\.git$##')"
 # every check run finished, none failed, and at least one exists (a commit CI has not picked up yet waits)
@@ -40,7 +45,8 @@ PORT="${PORT:-8787}"
 deploy() {   # $1 = commit to run; reinstalls deps only when the lockfile differs from what is installed
   # (set -e is off inside a function called from `if`, so every step returns on failure explicitly)
   local from; from="$(git rev-parse HEAD)"
-  git merge --quiet --ff-only "$1" 2>/dev/null || git reset --quiet --hard "$1" || return 1
+  # not `git merge --ff-only`: on the way back it "succeeds" without moving, leaving a rollback on the bad commit
+  git reset --quiet --hard "$1" || return 1
   if ! git diff --quiet "$from" "$1" -- package-lock.json; then
     ONNXRUNTIME_NODE_INSTALL=skip npm ci --omit=dev --no-audit --no-fund || return 1
   fi
@@ -59,5 +65,6 @@ if deploy "$NEW"; then
   exit 0
 fi
 echo "station unhealthy on ${NEW:0:9} — rolling back to ${OLD:0:9}" >&2
+echo "$NEW" > "$FAILED_FILE"
 deploy "$OLD" || echo "rollback did not come up healthy either: journalctl -u starnet -n 100" >&2
 exit 1
