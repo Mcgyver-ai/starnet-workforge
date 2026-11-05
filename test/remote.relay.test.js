@@ -351,7 +351,7 @@ function wsClose(url) {
       wss.handleUpgrade({ method: 'GET', headers: { upgrade: 'websocket', 'sec-websocket-key': nodeCrypto.randomBytes(16).toString('base64'), 'sec-websocket-version': '13' } }, sock, Buffer.alloc(0), (w) => { ws = w; });
       return { ws, sock };
     };
-    const wss = makeWsServer({ maxQueued: 1000, maxQueuedTotal: 1600 });
+    const wss = makeWsServer({ maxQueued: 2000, maxQueuedTotal: 3000 });
     const a = fakeConn(wss), b = fakeConn(wss);
     a.ws.send(Buffer.alloc(600));
     A.ok(a.ws.readyState === 1, 'a frame within the budget is sent');
@@ -367,6 +367,15 @@ function wsClose(url) {
     const d = fakeConn(wss);
     d.ws.send(Buffer.alloc(900));
     A.ok(d.ws.readyState === 1, 'so the budget is usable again');
+
+    // pings answered to a peer that never reads the pongs wait in memory too (the mask is all zeros, so the payload is unchanged)
+    const flooded = makeWsServer({ maxQueued: 2000 });
+    const pinger = fakeConn(flooded);
+    const ping = Buffer.concat([Buffer.from([0x89, 0x80 | 125, 0, 0, 0, 0]), Buffer.alloc(125)]);
+    pinger.sock.emit('data', Buffer.concat(Array(100).fill(ping)));
+    A.ok(pinger.ws.readyState === 3, 'a peer flooding pings without reading the pongs is dropped');
+    A.ok(flooded.queuedBytes() <= 2000, 'and its pongs stayed within the budget');
+    A.ok(pinger.sock.pending.length < 10, 'and parsing stopped at the drop, leaving the rest of the flood unanswered');
 
     const relay = makeRelay({ log() {} });
     const port = await relay.listen(0, '127.0.0.1');
