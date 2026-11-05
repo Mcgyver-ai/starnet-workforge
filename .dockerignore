@@ -1,0 +1,227 @@
+# dependencies
+node_modules/
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# logs / tmp
+*.log
+.tmp/
+
+# machine-local Claude settings
+.claude/settings.local.json
+
+# agent runtime workspaces / notes (created by tools at run time)
+workspaces/
+sidecar/workspaces/
+sidecar/workspaces.*/
+# preview/verify sidecar workspaces (per-worktree launch.json SKYNET_WORKSPACES)
+.verify-workspaces/
+.dev-workspaces*/
+
+# dev seed launcher: local secrets + the throwaway seeded workspace it materializes
+dev/.env.dev
+dev/.scratch-workspace/
+dev/.google-review-workspace/
+# mock-cron dev sidecar runtime state (roster/goals/cron json + .bak churn; never committed)
+dev/.scratch-mock-cron/
+# mock-comms dev sidecar runtime state (same shape; never committed)
+dev/.scratch-mock-comms/
+dev/.scratch-calm-errors/
+dev/.scratch-adversarial/
+dev/.scratch-deliverables/
+# free-chain dev sidecar runtime state (seed-free-chain.js materializes it; never committed)
+dev/.scratch-free-chain/
+# builder-lend seed scratch from runs before it moved under .dogfood/, plus the mock-login and mock-reliability
+# seeds' scratch stations (seed-mock-login.js / seed-mock-reliability.js; never committed)
+dev/.scratch-builder-lend/
+dev/.scratch-mock-login/
+dev/.scratch-mock-reliability/
+dev/.shots-deliverables/
+dev/.shots-wallcorner/
+dev/.shots-walljoin/
+# COMMS conversation seed + shooter (seed-comms-convo.js / comms-convo-shots.mjs; never committed)
+dev/.scratch-comms-convo*/
+dev/.shots-comms-convo/
+
+# rust / tauri desktop shell build output
+src-tauri/target/
+src-tauri/gen/
+
+# cut release artifacts (installer + sig + updater manifest; distributed via GitHub Releases, never committed)
+release/
+
+# bundled Node runtime fetched by scripts/prepare-node.mjs (large build input, never committed)
+src-tauri/binaries/
+
+# visual-harness screenshot output — regenerated scratch from uishoot/uiplay/uiresidue/uisummon
+# (each run writes a SHOT_DIR with a nested _profile chrome user-data-dir). Never committed.
+.uishots*/
+.mock-shot/
+# dev/idlesoak.mjs output (report.json + its own seeded workspace + chrome profile). Never committed.
+.idlesoak*/
+# dev/rotshot.mjs + dev/catshot.mjs contact sheets (regenerated art proofs). Never committed.
+rotshot/
+catshot/
+# dev/bodyphysics.mjs output (samples.json + its own seeded workspace + chrome profile). Never committed.
+.bodyphysics*/
+# qa:summon-delegate journey scratch (seeded workspace + its own chrome profile). Never committed.
+.summon-journey/
+.qa_tmp/
+.tmpshot/
+.postcard-verify/
+.clip-verify/
+.uiplay/
+.uiresidue/
+.wallprobe*/
+.uisummon/
+.uiaudit/
+.uijourneys/
+.uiatlas/
+.uigolden/
+.dogfood/
+.bugloops/
+.matest-workspaces/
+# skin-generation working files (pixellab scratch; the committed sprite sets + _preset recipe stay tracked)
+frontend/assets/sprites/_clawd_work/
+# manual backup copy of the minion sprite preset (live set is tracked at frontend/assets/sprites/minion/)
+design/minion_backup_preset/
+
+# QA ledger findings — one <id>.json per finding, written at RUN TIME by scripts/qa/ledger.mjs
+# (and janitor.mjs) into whatever checkout the crew runs in. They are MACHINE-LOCAL run
+# artifacts: their evidence[] paths point at gitignored .bugloops/ output with absolute local
+# paths baked in, and dismissed/known triage state is ephemeral (the durable, portable baseline
+# lives in qa/KNOWN_ISSUES.md; re-blessed visual goldens live in scripts/goldens.json — both
+# tracked). The scripts read/create qa/findings/ physically via fs, never from git, so ignoring
+# these does not affect them. Keep the dir itself (via .gitkeep) + the README (a .md, not matched).
+qa/findings/*.json
+
+# Red-Green Closer run evidence — one dir per run, written at RUN TIME by scripts/qa/closer.mjs.
+# Same class as qa/findings/ above: MACHINE-LOCAL. manifest.json/verdict.json bake absolute
+# candidate-worktree paths, and the gate logs are per-run detector spew (the same reason
+# .bugloops/ is ignored). The durable record of a closed finding is the digest line + the
+# qa/STATUS.md entry the L11 loop writes, and the winning patch is handed to the merge ritual
+# rather than archived here. The script creates run dirs physically via fs, never from git.
+qa/closer/
+
+# QA READY-GATE machine stamps (EL-7) — last-run state each crew runner writes at RUN TIME for
+# scripts/qa/ready.mjs to read. Same class as qa/findings: machine-local, ephemeral, regenerated
+# every cycle (carry local trunk shas + timestamps), read via fs never from git.
+qa/guardian-last-cycle.json
+qa/journeys-last-run.json
+qa/beginner-last-run.json
+
+# Installed-exe smoke run artifacts (scripts/qa/installed-smoke.mjs). The pinned stamp
+# (last-smoke.json) + per-run evidence dirs are MACHINE-LOCAL: the stamp records THIS machine's
+# installed build + the local trunk head it ran against, and the qa:ready gate reads it via fs at
+# run time (never from git). Same reasoning as qa/findings above — keep the dir (.gitkeep + README),
+# ignore the run output. (Granular entries, NOT a dir-level ignore: .gitkeep + README are tracked.)
+qa/installed/last-smoke.json
+qa/installed/smoke-*/
+
+# G0 lane visual-proof screenshots (headless capture output; never committed)
+.qa_g0/
+# G1a lane visual-proof screenshots (same pattern)
+.qa_g1a/
+# G2 lane visual-proof screenshots (same pattern)
+.qa_g2/
+# G3a lane visual-proof screenshots (same pattern)
+.qa_g3a/
+# G1b lane visual-proof screenshots (same pattern)
+.qa_g1b/
+# G1c lane visual-proof screenshots (same pattern)
+.qa_g1c/
+# bootfix lane visual-proof + repro scratch (headless shoot captures + the tarpit repros; never committed)
+.qa_bootfix/
+.qa_bootfix_full/
+# G3b lane visual-proof screenshots (TROPHY CASE + seed-reuse callout; same pattern)
+.qa_g3b/
+# G4 lane visual-proof screenshots (approval walk-and-wait + autojob pin + Meeseeks; same pattern)
+.qa_g4/
+# rug/bed lane visual proof (dev/rugbed-proof.mjs + dev/rug-sheet.mjs + dev/rug-sizes-proof.mjs write
+# their captures and their seed workspace here). Untracked and unignored, it blocks the claims relock
+# guard, which refuses to run over foreign untracked files.
+.rugbed-shots/
+.canary/
+
+# machine-local Claude Code dev-server config (regenerated per machine)
+.claude/launch.json
+
+# internal multi-agent factory tooling — local-only, never in the public tree
+.claude/
+/CLAUDE.md
+/AGENTS.md
+
+# machine-local session litter (never track)
+CODEX_HANDOFF.md
+http-gate.err
+qa/digests/
+dev/.scratch-clarify/
+
+# staged runtime node_modules for the desktop bundle (build artifact, ~480MB)
+src-tauri/voice-deps/
+src-tauri/frontend-dist/
+
+# python bytecode from the sprite assembly scripts
+__pycache__/
+*.pyc
+
+# the exact upload for starnetos.com, rebuilt by scripts/stage-website-deploy.mjs each deploy
+website-deploy/
+
+# ABILITIES lane visual-proof screenshots (headless capture output; never committed)
+dev/.shots-abilities/
+.shots-before/
+
+# LINE PLACEMENT lane visual-proof screenshots (headless capture output; never committed)
+dev/.shots-line-placement/
+dev/.shots-ux-walk/
+
+# CONVEYOR CORRECTNESS lane visual-proof screenshots + claim log (headless capture output; never committed)
+dev/.shots-conveyor-correctness/
+dev/.shots-conveyor-correctness.log
+
+# CREW rail roster-window proof shots (same pattern)
+dev/.shots-crew-fit/
+
+# SHELL-CORNER lane proof shots — corner attribution + multi-room sweep (same pattern)
+dev/.shots-shellcorner*/
+dev/.shots-shellsweep/
+dev/.shots-wcmat/
+
+# INBOX WHEN-PICKER lane visual-proof screenshots (headless capture output; never committed)
+dev/.shots-inbox-when/
+
+# settings-perf lane visual-proof screenshots (headless capture output; never committed)
+dev/.shots-settings-perf/
+
+# TOAST SEAT lane visual-proof screenshots (headless capture output; never committed)
+dev/.shots-toast/
+
+# dev/shellstep + shellholes/shellinfront/baketime harness output (offscreen bakes on magenta). Never committed.
+.shellstep/
+.shellholes/
+.shellinfront/
+.shellseam/
+
+# Isolated group-DM live-test application profile (never production data).
+/dev/.group-profile/
+.worldshots/
+sidecar/mcp/google-client.json
+
+# Local generated minion sources, archive downloads and assembly reports.
+/dev/industrial-textures/minion-source/
+
+# Local shell material live-proof images and disposable browser profile.
+/.shell-proof/
+/.local/google-review/
+
+src-tauri/frontend-embed/
+# user-study-loop live proof scratch (seeded workspace + chrome profile). Never committed.
+dev/.scratch-workspace-usl-proof/
+# workspace-recovery writes its owner-record generations beside the scratch workspace (sidecar/workspace-recovery.js). Never committed.
+dev/.scratch-workspace.recovery-owner.json.generations/
+# local gate/sweep logs and scratch output moved out of the repo root. Never committed.
+/logs/
