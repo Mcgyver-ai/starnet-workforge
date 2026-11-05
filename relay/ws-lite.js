@@ -35,8 +35,9 @@ const FRAMES_PER_SEC = 1000, FRAME_BURST = 2000;
 /* A peer that stops reading makes every frame sent to it wait in this process's memory, and anyone can make a station
    and a phone. One socket holds room for a few full frames (a relayed frame is at most 1 MB) and all sockets together
    stay well under the machine's memory (the per-socket cap alone doesn't: many sockets add up); over either, the
-   connection being written to is dropped. */
-const MAX_QUEUED = 4 * 1024 * 1024, MAX_QUEUED_TOTAL = 256 * 1024 * 1024;
+   connection being written to is dropped. Each write also counts WRITE_OVERHEAD: a waiting write costs Node about
+   200 bytes beyond its data (measured), so a flood of tiny frames would otherwise use far more than the budget says. */
+const MAX_QUEUED = 4 * 1024 * 1024, MAX_QUEUED_TOTAL = 256 * 1024 * 1024, WRITE_OVERHEAD = 512;
 
 function makeWsServer(opts) {
   const maxPayload = (opts && opts.maxPayload) || 1024 * 1024;
@@ -72,17 +73,20 @@ function makeWsServer(opts) {
       if (!closeEmitted) { closeEmitted = true; ws.emit('close', code == null ? 1006 : code, reason || ''); }
     }
     let queued = 0;
+    function writeCounted(out) {
+      const cost = out.length + WRITE_OVERHEAD;
+      if (queued + cost > maxQueued || totalQueued + cost > maxQueuedTotal) return destroy(1013, 'too slow');
+      queued += cost; totalQueued += cost;
+      // the callback also fires when the socket is destroyed with this write still waiting, so nothing stays counted
+      const release = () => { queued -= cost; totalQueued -= cost; };
+      try { socket.write(out, release); } catch (_) { release(); }
+    }
     ws.send = (data) => {
       if (ws.readyState !== 1) return;
       const isBuf = Buffer.isBuffer(data);
-      const out = frame(isBuf ? 0x2 : 0x1, isBuf ? data : Buffer.from(String(data), 'utf8'));
-      if (queued + out.length > maxQueued || totalQueued + out.length > maxQueuedTotal) return destroy(1013, 'too slow');
-      queued += out.length; totalQueued += out.length;
-      // the callback also fires when the socket is destroyed with this write still waiting, so nothing stays counted
-      const release = () => { queued -= out.length; totalQueued -= out.length; };
-      try { socket.write(out, release); } catch (_) { release(); }
+      writeCounted(frame(isBuf ? 0x2 : 0x1, isBuf ? data : Buffer.from(String(data), 'utf8')));
     };
-    ws.ping = () => { if (ws.readyState === 1) { try { socket.write(frame(0x9, Buffer.alloc(0))); } catch (_) {} } };
+    ws.ping = () => { if (ws.readyState === 1) writeCounted(frame(0x9, Buffer.alloc(0))); };
     ws.close = (code, reason) => {
       if (ws.readyState !== 1) return;
       ws.readyState = 2;
@@ -136,7 +140,8 @@ function makeWsServer(opts) {
             destroy(code, reason);
             return;
           }
-          if (op === 0x9) { try { socket.write(frame(0xA, payload)); } catch (_) {} continue; }
+          // a peer can send these forever without reading the replies, so they count against the budget too
+          if (op === 0x9) { writeCounted(frame(0xA, payload)); if (ws.readyState === 3) return; continue; }
           if (op === 0xA) { ws.emit('pong'); continue; }
           return fail(1002, 'unknown control opcode');
         }

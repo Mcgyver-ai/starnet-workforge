@@ -2,7 +2,8 @@
 # Pull-based station updates: the starnet-update timer runs this every 15 minutes (setup.sh installs it).
 # It fast-forwards the checkout to its upstream branch ONLY when every GitHub check on the new commit passed,
 # reinstalls dependencies when the lockfile changed, restarts the station, and rolls back if /api/health fails.
-# Nothing reaches into the VM: no inbound port, no deploy key in GitHub. Needs `gh auth login` for the CI check.
+# Nothing reaches into the VM: no inbound port, no deploy key in GitHub. No GitHub login either: agents run as this
+# user and could read a token, and a public repo's check results need none.
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -32,10 +33,10 @@ FAILED_FILE="$(git rev-parse --git-path starnet-failed-commit)"
 # owner/repo from the origin URL (https or ssh form)
 SLUG="$(git remote get-url origin | sed -E 's#^(https://github\.com/|git@github\.com:)##; s#\.git$##')"
 # every check run finished, none failed, and at least one exists (a commit CI has not picked up yet waits)
-# shellcheck disable=SC2016  # $bad is a jq variable, not a shell one
-VERDICT="$(gh api "repos/$SLUG/commits/$NEW/check-runs?per_page=100" --jq '
-  [.check_runs[] | select(.status != "completed" or (.conclusion | IN("success","skipped","neutral") | not))] as $bad
-  | if (.check_runs | length) == 0 then "none" elif ($bad | length) > 0 then "wait" else "green" end')"
+VERDICT="$(curl -fsS --max-time 30 "https://api.github.com/repos/$SLUG/commits/$NEW/check-runs?per_page=100" | node -e '
+  const runs = JSON.parse(require("fs").readFileSync(0, "utf8")).check_runs;
+  const bad = runs.filter(r => r.status !== "completed" || !["success", "skipped", "neutral"].includes(r.conclusion));
+  console.log(runs.length === 0 ? "none" : bad.length > 0 ? "wait" : "green");')"
 [ "$VERDICT" = green ] || { echo "${NEW:0:9}: CI is '$VERDICT' — staying on ${OLD:0:9}"; exit 0; }
 
 PORT="$(sudo sed -n 's/^STARNET_PORT=//p' "$ENV_FILE" 2>/dev/null | tail -1 || true)"
@@ -65,6 +66,10 @@ if deploy "$NEW"; then
   exit 0
 fi
 echo "station unhealthy on ${NEW:0:9} — rolling back to ${OLD:0:9}" >&2
-echo "$NEW" > "$FAILED_FILE"
-deploy "$OLD" || echo "rollback did not come up healthy either: journalctl -u starnet -n 100" >&2
+# recorded only after a good rollback: when both fail (npm's network, say) the next run must try again, or nothing repairs node_modules
+if deploy "$OLD"; then
+  echo "$NEW" > "$FAILED_FILE"
+else
+  echo "rollback did not come up healthy either, trying again next run: journalctl -u starnet -n 100" >&2
+fi
 exit 1

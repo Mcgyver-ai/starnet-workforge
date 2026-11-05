@@ -21,10 +21,9 @@ sudo apt-get update && sudo apt-get install -y git   # a fresh image has empty p
 git clone https://github.com/Mcgyver-ai/starnet-workforge.git starnet
 cd starnet
 bash deploy/oracle-vm/setup.sh
-gh auth login   # automatic updates read CI results with this; skip it and they fail every 15 minutes
 ```
 
-The script installs Node 22, build tools and the GitHub CLI (`gh`), runs `npm ci --omit=dev`, writes `/etc/systemd/system/starnet.service`,
+The script installs Node 22 and build tools, runs `npm ci --omit=dev`, writes `/etc/systemd/system/starnet.service`,
 starts it, and waits for `GET /api/health`. Re-run it any time; it is idempotent.
 
 ## 3. Open it from your PC
@@ -60,8 +59,9 @@ For phone access without a tunnel, pair StarNet Remote from the app: the station
 every GitHub check on the new commit has passed, fast-forwards, runs `npm ci` if `package-lock.json` changed,
 restarts the station, and rolls back to the previous commit if `/api/health` does not answer within 30 s. A commit
 that had to be rolled back is not tried again until a newer one lands; to retry it now, delete
-`.git/starnet-failed-commit`. It pulls; nothing in GitHub can reach the VM. It needs `gh auth login` on the VM to read
-the check results (a VM set up before `setup.sh` installed `gh` needs `setup.sh` re-run first), and it refuses to
+`.git/starnet-failed-commit`. If the rollback fails too, the next run tries again. It pulls; nothing in GitHub can reach
+the VM. It reads check results from GitHub's public API with no login, so leave GitHub signed out on the VM: agents could
+read a token there. A private repo would need another way to read them. It refuses to
 update over local edits or a non-fast-forward. One failed check holds the update until that check is re-run or a
 newer commit passes. A restart interrupts runs in flight (the station resumes journaled runs on boot). Turn it off with `sudo systemctl disable --now starnet-update.timer`.
 

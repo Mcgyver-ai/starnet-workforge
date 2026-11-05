@@ -14,9 +14,12 @@ mkdir "$TMP/bin"
 stub() { printf '#!/usr/bin/env bash\n%s\n' "$2" > "$TMP/bin/$1"; chmod +x "$TMP/bin/$1"; }
 stub flock 'exit 0'
 stub sleep 'exit 0'
-stub gh 'echo green'
 stub sudo '[ "$1 $2" = "systemctl restart" ] && echo restart >> "$STUB_DIR/restarts"; exit 0'
-stub curl '[ "$(git rev-parse HEAD)" != "$(cat "$STUB_DIR/bad")" ]'   # healthy unless on the bad commit
+stub npm '[ -f "$STUB_DIR/npm-works" ]'
+# GitHub's check results come from $STUB_DIR/checks; the station is healthy unless on the bad commit
+stub curl 'case "$*" in *check-runs*) cat "$STUB_DIR/checks" ;; *) [ "$(git rev-parse HEAD)" != "$(cat "$STUB_DIR/bad")" ] ;; esac'
+checks() { echo "{\"check_runs\":[{\"status\":\"$1\",\"conclusion\":\"$2\"}]}" > "$TMP/checks"; }
+checks completed success
 export PATH="$TMP/bin:$PATH"
 
 git init --quiet --bare -b main "$TMP/origin.git"
@@ -50,6 +53,27 @@ GOOD="$(commit good)"
 rc=0; update || rc=$?
 expect "a newer good commit still lands" "$(head_now)" "$GOOD"
 expect "with one restart and no error" "$rc:$(restarts)" 0:3
+
+UNCHECKED="$(commit unchecked)"
+checks completed failure
+rc=0; update || rc=$?
+expect "a failed check holds the update" "$rc:$(head_now)" "0:$GOOD"
+checks in_progress null
+rc=0; update || rc=$?
+expect "so does a check still running" "$rc:$(head_now)" "0:$GOOD"
+checks completed success
+update
+expect "a green commit lands" "$(head_now)" "$UNCHECKED"
+
+# npm's network is down: the update and its rollback both fail, and only a later retry can repair node_modules
+echo changed > "$TMP/pusher/package-lock.json"
+git -C "$TMP/pusher" add package-lock.json
+LOCK="$(commit lockfile)"
+rc=0; update || rc=$?
+expect "an update and rollback that both fail report failure" "$rc" 1
+touch "$TMP/npm-works"
+update
+expect "the next run tries that commit again" "$(head_now)" "$LOCK"
 
 [ "$fails" = 0 ] || exit 1
 echo "auto-update.test: OK"
