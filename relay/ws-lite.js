@@ -32,10 +32,18 @@ function frame(opcode, payload) {
    has a FRAME budget checked in the parser itself, and a message may be split into at most MAX_FRAGS frames. */
 const MAX_FRAGS = 256;
 const FRAMES_PER_SEC = 1000, FRAME_BURST = 2000;
+/* A peer that stops reading makes every frame sent to it wait in this process's memory, and anyone can make a station
+   and a phone. One socket holds room for a few full frames (a relayed frame is at most 1 MB) and all sockets together
+   stay well under the machine's memory (the per-socket cap alone doesn't: many sockets add up); over either, the
+   connection being written to is dropped. */
+const MAX_QUEUED = 4 * 1024 * 1024, MAX_QUEUED_TOTAL = 256 * 1024 * 1024;
 
 function makeWsServer(opts) {
   const maxPayload = (opts && opts.maxPayload) || 1024 * 1024;
+  const maxQueued = (opts && opts.maxQueued) || MAX_QUEUED;
+  const maxQueuedTotal = (opts && opts.maxQueuedTotal) || MAX_QUEUED_TOTAL;
   const clients = new Set();
+  let totalQueued = 0;
 
   function handleUpgrade(req, socket, head, cb) {
     const key = req.headers['sec-websocket-key'];
@@ -63,10 +71,16 @@ function makeWsServer(opts) {
       }
       if (!closeEmitted) { closeEmitted = true; ws.emit('close', code == null ? 1006 : code, reason || ''); }
     }
+    let queued = 0;
     ws.send = (data) => {
       if (ws.readyState !== 1) return;
       const isBuf = Buffer.isBuffer(data);
-      try { socket.write(frame(isBuf ? 0x2 : 0x1, isBuf ? data : Buffer.from(String(data), 'utf8'))); } catch (_) {}
+      const out = frame(isBuf ? 0x2 : 0x1, isBuf ? data : Buffer.from(String(data), 'utf8'));
+      if (queued + out.length > maxQueued || totalQueued + out.length > maxQueuedTotal) return destroy(1013, 'too slow');
+      queued += out.length; totalQueued += out.length;
+      // the callback also fires when the socket is destroyed with this write still waiting, so nothing stays counted
+      const release = () => { queued -= out.length; totalQueued -= out.length; };
+      try { socket.write(out, release); } catch (_) { release(); }
     };
     ws.ping = () => { if (ws.readyState === 1) { try { socket.write(frame(0x9, Buffer.alloc(0))); } catch (_) {} } };
     ws.close = (code, reason) => {
@@ -155,7 +169,7 @@ function makeWsServer(opts) {
     if (buf.length) parse();
   }
 
-  return { handleUpgrade, clients };
+  return { handleUpgrade, clients, queuedBytes: () => totalQueued };
 }
 
-module.exports = { makeWsServer, MAX_FRAGS, FRAMES_PER_SEC, FRAME_BURST };
+module.exports = { makeWsServer, MAX_FRAGS, FRAMES_PER_SEC, FRAME_BURST, MAX_QUEUED, MAX_QUEUED_TOTAL };

@@ -338,5 +338,66 @@ function wsClose(url) {
     A.ok(wrote.slice(before).some((b) => b[0] === 0x88), 'a fragment that would overflow the message is refused at its header, before its bytes are buffered');
     A.ok(ws && ws.readyState !== 1, 'and the socket is closed');
   }
+  // A peer that stops reading cannot grow the relay's memory: a stranger's own station and phone used to do ~90 MB/s.
+  {
+    const { makeWsServer, MAX_QUEUED } = require('../relay/ws-lite.js');
+    const { EventEmitter } = require('events');
+    const fakeConn = (wss) => {
+      const sock = new EventEmitter();
+      sock.pending = [];
+      sock.write = (b, cb) => { if (cb) sock.pending.push(cb); return true; };
+      sock.destroy = () => {}; sock.setNoDelay = () => {}; sock.end = () => {};
+      let ws = null;
+      wss.handleUpgrade({ method: 'GET', headers: { upgrade: 'websocket', 'sec-websocket-key': nodeCrypto.randomBytes(16).toString('base64'), 'sec-websocket-version': '13' } }, sock, Buffer.alloc(0), (w) => { ws = w; });
+      return { ws, sock };
+    };
+    const wss = makeWsServer({ maxQueued: 1000, maxQueuedTotal: 1600 });
+    const a = fakeConn(wss), b = fakeConn(wss);
+    a.ws.send(Buffer.alloc(600));
+    A.ok(a.ws.readyState === 1, 'a frame within the budget is sent');
+    a.ws.send(Buffer.alloc(600));
+    A.ok(a.ws.readyState === 3, 'one socket over its own budget is dropped');
+    b.ws.send(Buffer.alloc(900));
+    A.ok(b.ws.readyState === 1, 'and the other socket is untouched');
+    const c = fakeConn(wss);
+    c.ws.send(Buffer.alloc(900));
+    A.ok(c.ws.readyState === 3, 'many sockets together cannot pass the process-wide budget, even each under its own');
+    a.sock.pending.concat(b.sock.pending).forEach((cb) => cb());
+    A.eq(wss.queuedBytes(), 0, 'flushed or destroyed writes stop counting');
+    const d = fakeConn(wss);
+    d.ws.send(Buffer.alloc(900));
+    A.ok(d.ws.readyState === 1, 'so the budget is usable again');
+
+    const relay = makeRelay({ log() {} });
+    const port = await relay.listen(0, '127.0.0.1');
+    const pair = nodeCrypto.generateKeyPairSync('ec', { namedCurve: 'P-256' });
+    const jwk = pair.publicKey.export({ format: 'jwk' });
+    const pub = Buffer.concat([Buffer.from([4]), Buffer.from(jwk.x, 'base64url'), Buffer.from(jwk.y, 'base64url')]).toString('base64url');
+    const rid = ridOf(pub);
+    const station = new WebSocket('ws://127.0.0.1:' + port + '/v1/station');
+    let conn = null;
+    station.onmessage = (ev) => {
+      const m = JSON.parse(ev.data);
+      if (m.t === 'challenge') station.send(JSON.stringify({ t: 'auth', pub, sig: nodeCrypto.sign('sha256', Buffer.from(LABEL + '|' + m.nonce), pair.privateKey).toString('base64url') }));
+      if (m.t === 'ready') station.send(JSON.stringify({ t: 'tokens', hashes: [tokenHash('stalled')] }));
+      if (m.t === 'open') conn = m.conn;
+    };
+    await waitUntil(() => { const s = relay._stations.get(rid); return s && s.tokensReady; }, 5000, 'the station to sign in');
+    const stalled = net.connect(port, '127.0.0.1', () => stalled.write('GET /v1/phone?rid=' + rid + '&tok=stalled HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: ' + nodeCrypto.randomBytes(16).toString('base64') + '\r\nSec-WebSocket-Version: 13\r\n\r\n'));
+    stalled.on('error', () => {});
+    stalled.once('data', () => stalled.pause());   // saw the handshake, never reads again
+    await waitUntil(() => conn !== null, 5000, 'the phone to connect');
+    const big = JSON.stringify({ t: 'to', conn, msg: { pad: 'x'.repeat(900 * 1024) } });
+    const pump = setInterval(() => { if (station.bufferedAmount < MAX_QUEUED) for (let i = 0; i < 5; i++) station.send(big); }, 25);
+    try {
+      await waitUntil(() => relay._stations.get(rid).phones.size === 0, 20000, 'the relay to drop the phone that stopped reading');
+    } finally { clearInterval(pump); }
+    A.ok(relay._stations.get(rid).ws.readyState === 1, 'the station itself stays connected');
+    await waitUntil(() => relay._queuedBytes() < MAX_QUEUED, 5000, 'the dropped phone\'s queue to be released');
+    stalled.destroy();
+    station.close();
+    await Promise.race([relay.close(), sleep(3000)]);
+    relay.server.closeAllConnections();
+  }
   A.report('remote relay');
 })();
