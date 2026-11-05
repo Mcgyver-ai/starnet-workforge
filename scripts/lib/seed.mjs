@@ -90,10 +90,18 @@ export const READY_EXPR = `(() => { try {
 } catch (e) { return false; } })()`;
 
 export async function waitDevReady(cdp, evalJS, { tries = 24, url, reloadEvery = 5 } = {}) {
+  let triesSinceLoaded = 0;
   for (let i = 0; i < tries; i++) {
     const ok = await evalJS(cdp, READY_EXPR).catch(() => false);
     if (ok) return true;
-    if (url && reloadEvery && i > 0 && i % reloadEvery === 0) { try { await cdp.send('Page.navigate', { url }); } catch {} }
+    // Only a page that finished loading and still is not ready is stuck. Reloading one still loading restarts it,
+    // so on a CPU slow enough that a load outlasts reloadEvery tries it would never become ready.
+    const loaded = await evalJS(cdp, 'document.readyState').catch(() => null) === 'complete';
+    triesSinceLoaded = loaded ? triesSinceLoaded + 1 : 0;
+    if (url && reloadEvery && triesSinceLoaded >= reloadEvery) {
+      triesSinceLoaded = 0;
+      try { await cdp.send('Page.navigate', { url }); } catch {}
+    }
     await sleep(1000);
   }
   return false;
