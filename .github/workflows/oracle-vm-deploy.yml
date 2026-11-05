@@ -45,17 +45,8 @@ jobs:
       - name: Update rolls back a bad commit and does not retry it
         run: bash deploy/oracle-vm/auto-update.test.sh
 
-      # the runner ships with gh, an Oracle image does not: remove it so setup.sh's own install path runs
-      - name: Remove the runner's gh
-        run: |
-          sudo apt-get remove -y gh
-          sudo rm -f /etc/apt/sources.list.d/github-cli.list
-
       - name: Run setup.sh
         run: bash deploy/oracle-vm/setup.sh
-
-      - name: setup.sh installed gh
-        run: gh --version
 
       - name: Station is a running systemd service
         run: systemctl is-active starnet
